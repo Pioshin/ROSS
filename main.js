@@ -690,21 +690,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tryUseJolly('BANCA ROTTA')) {
                 setTimeout(() => setGameState('SPIN'), 1600);
             } else {
+                stopTimerSafe();
                 setTimeout(passTurn, 1600);
             }
         } else if (result === 'PASSAMANO' || result === 'PERDI TURNO') { // supporta vecchio testo
             if (tryUseJolly('PASSAMANO')) {
                 setTimeout(() => setGameState('SPIN'), 1600);
             } else {
+                stopTimerSafe();
                 setTimeout(passTurn, 1600);
             }
         } else if (result === 'JOLLY') {
             // Su JOLLY: il giocatore deve indovinare una consonante per riceverlo
             currentSpinValue = 'JOLLY';
             setGameState('GUESS_CONSONANT');
+            startConsonantTimer();
         } else {
             currentSpinValue = result;
             setGameState('GUESS_CONSONANT');
+            startConsonantTimer();
         }
     }
     
@@ -727,8 +731,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     evaluateConsonantsLeft();
                     setTimeout(() => {
                         if (!checkWinCondition()) {
-                            if (!allConsonantsRevealed) setGameState('SPIN');
-                            else {
+                            if (!allConsonantsRevealed) {
+                                setGameState('SPIN');
+                                startActionTimer();
+                            } else {
                                 showPopup('Consonanti finite: compra vocali o risolvi.', 'info');
                                 setGameState('ONLY_VOWELS');
                             }
@@ -739,8 +745,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 showPopup(`La lettera "${letter}" non c'è. Niente Jolly!`, 'error');
                 setTimeout(() => {
                     if (tryUseJolly('LETTERA ERRATA')) {
-                        setTimeout(() => setGameState('SPIN'), 1000);
+                        setTimeout(() => {
+                            setGameState('SPIN');
+                            startActionTimer();
+                        }, 1000);
                     } else {
+                        stopTimerSafe();
                         setTimeout(passTurn, 1000);
                     }
                 }, 1200);
@@ -759,8 +769,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Dopo una lettera corretta, il giocatore può continuare
             setTimeout(() => {
                 if (!checkWinCondition()) {
-                    if (!allConsonantsRevealed) setGameState('SPIN');
-                    else {
+                    if (!allConsonantsRevealed) {
+                        setGameState('SPIN');
+                        startActionTimer();
+                    } else {
                         showPopup('Consonanti finite: compra vocali o risolvi.', 'info');
                         setGameState('ONLY_VOWELS');
                     }
@@ -769,18 +781,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             showPopup(`La lettera "${letter}" non c'è.`, 'error');
             if (tryUseJolly('LETTERA ERRATA')) {
-                setTimeout(() => setGameState('SPIN'), 2000);
+                setTimeout(() => {
+                    setGameState('SPIN');
+                    startActionTimer();
+                }, 2000);
             } else {
+                stopTimerSafe();
                 setTimeout(passTurn, 2000);
             }
         }
     }
     
     function passTurn() {
+        // Ferma il timer prima di passare il turno
+        stopTimerSafe();
+        
         currentPlayerIndex = (currentPlayerIndex + 1) % playerScores.length;
         const playerName = document.getElementById(`player-${currentPlayerIndex}-name`).value;
         updateActivePlayer();
-    showPopup(`Ora è il turno di ${playerName}`, 'info');
+        showPopup(`Ora è il turno di ${playerName}`, 'info');
         setGameState('SPIN');
     }
     
@@ -869,6 +888,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleKeyPress(letter) {
+        // Ferma immediatamente il timer quando si sceglie una lettera
+        stopTimerSafe();
+        
         if (gameState === 'GUESS_CONSONANT') {
             checkLetter(letter, currentSpinValue);
         } else if (gameState === 'BUY_VOWEL' || gameState === 'ONLY_VOWELS') {
@@ -967,8 +989,12 @@ document.addEventListener('DOMContentLoaded', () => {
             solveInputContainer.classList.add('hidden');
             showPopup("Soluzione sbagliata!", 'error');
             if (tryUseJolly('SOLUZIONE ERRATA')) {
-                setTimeout(() => setGameState('SPIN'), 2000);
+                setTimeout(() => {
+                    setGameState('SPIN');
+                    startActionTimer();
+                }, 2000);
             } else {
+                stopTimerSafe();
                 setTimeout(passTurn, 2000);
             }
         }
@@ -1045,6 +1071,128 @@ document.addEventListener('DOMContentLoaded', () => {
             jollyEl.style.color = '';
         }, 100);
     }
+
+    // --- Inizializzazione ---
+    // --- TIMER E IMPOSTAZIONI ---
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const closeSettingsBtn = document.getElementById('close-settings');
+    const enableTimerCheckbox = document.getElementById('enable-timer');
+    const consonantTimerInput = document.getElementById('consonant-timer-seconds');
+    const actionTimerInput = document.getElementById('action-timer-seconds');
+    const timerContainer = document.getElementById('timer-container');
+    const timerDisplay = document.getElementById('timer-display');
+
+    let timerEnabled = false;
+    let consonantTimerSeconds = 10;
+    let actionTimerSeconds = 5;
+    let timerInterval = null;
+    let timerTimeout = null;
+
+    function playBeep() {
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.value = 0.2;
+        o.connect(g).connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, 120);
+    }
+    function playEndSound() {
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'triangle';
+        o.frequency.value = 220;
+        g.gain.value = 0.4;
+        o.connect(g).connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, 400);
+    }
+    
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            if (settingsOverlay) settingsOverlay.classList.remove('hidden');
+            if (enableTimerCheckbox) enableTimerCheckbox.checked = timerEnabled;
+            if (consonantTimerInput) consonantTimerInput.value = consonantTimerSeconds;
+            if (actionTimerInput) actionTimerInput.value = actionTimerSeconds;
+        });
+    }
+    if (closeSettingsBtn) {
+        closeSettingsBtn.addEventListener('click', () => {
+            // Salva le impostazioni prima di chiudere
+            if (consonantTimerInput) consonantTimerSeconds = parseInt(consonantTimerInput.value) || 10;
+            if (actionTimerInput) actionTimerSeconds = parseInt(actionTimerInput.value) || 5;
+            if (settingsOverlay) settingsOverlay.classList.add('hidden');
+        });
+    }
+    if (enableTimerCheckbox) {
+        enableTimerCheckbox.addEventListener('change', (e) => {
+            timerEnabled = e.target.checked;
+            if (!timerEnabled) {
+                stopTimerSafe();
+                if (timerContainer) timerContainer.style.display = 'none';
+            }
+        });
+    }
+    
+    function startTimerSafe(seconds, onTimeout) {
+        if (!timerEnabled || !timerContainer || !timerDisplay) return;
+        timerDisplay.textContent = seconds;
+        timerContainer.style.display = '';
+        clearInterval(timerInterval);
+        clearTimeout(timerTimeout);
+        timerInterval = setInterval(() => {
+            seconds--;
+            timerDisplay.textContent = seconds;
+            playBeep();
+            if (seconds <= 3) timerDisplay.classList.add('text-red-500');
+            else timerDisplay.classList.remove('text-red-500');
+            if (seconds <= 0) {
+                clearInterval(timerInterval);
+            }
+        }, 1000);
+        timerTimeout = setTimeout(() => {
+            playEndSound();
+            if (timerContainer) timerContainer.style.display = 'none';
+            clearInterval(timerInterval);
+            if (typeof onTimeout === 'function') onTimeout();
+        }, seconds * 1000);
+    }
+    function stopTimerSafe() {
+        clearInterval(timerInterval);
+        clearTimeout(timerTimeout);
+        if (timerContainer) timerContainer.style.display = 'none';
+        if (timerDisplay) timerDisplay.classList.remove('text-red-500');
+    }
+    function startConsonantTimer() {
+        if (!timerEnabled) return;
+        startTimerSafe(consonantTimerSeconds, () => {
+            showPopup('⏰ Tempo scaduto! Passa al prossimo giocatore.');
+            passTurn();
+        });
+    }
+    
+    function startActionTimer() {
+        if (!timerEnabled) return;
+        startTimerSafe(actionTimerSeconds, () => {
+            showPopup('⏰ Tempo scaduto! Passa al prossimo giocatore.');
+            passTurn();
+        });
+    }
+    
+    function onPlayerActionSafe() {
+        if (timerEnabled) stopTimerSafe();
+    }
+    
+    // Aggiungi timer agli event listener esistenti
+    spinBtn.addEventListener('click', onPlayerActionSafe);
+    buyVowelBtn.addEventListener('click', onPlayerActionSafe);
+    solveBtn.addEventListener('click', onPlayerActionSafe);
 
     // --- Inizializzazione ---
     createKeyboard();

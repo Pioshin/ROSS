@@ -18,6 +18,12 @@
     </div>
 
     <div class="container mx-auto px-4 py-6">
+        <!-- Pulsante Impostazioni -->
+        <div class="flex justify-end mb-4">
+            <button id="settings-btn" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-700 text-white rounded-lg font-bold text-lg shadow-lg transition-colors">
+                ⚙️ Impostazioni
+            </button>
+        </div>
         <!-- Layout principale -->
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
             
@@ -34,7 +40,40 @@
                 </div>
                 
                 <!-- Controlli Gioco -->
+                <!-- TIMER -->
+                <div id="timer-container" class="flex flex-col items-center mb-2" style="display:none;">
+                    <div id="timer-display" class="text-5xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse" style="font-family: 'Orbitron', 'Baloo 2', cursive;">
+                        10
+                    </div>
+                </div>
                 <div class="flex flex-wrap justify-center gap-3 mb-6">
+    <!-- Overlay Impostazioni -->
+    <div id="settings-overlay" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white text-gray-900 rounded-xl shadow-2xl p-8 w-full max-w-md relative">
+            <button id="close-settings" class="absolute top-2 right-2 text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            <h2 class="text-2xl font-bold mb-6 text-cyan-700">Impostazioni Timer</h2>
+            
+            <div class="flex items-center mb-4">
+                <input type="checkbox" id="enable-timer" class="mr-3 scale-150">
+                <label for="enable-timer" class="text-lg font-semibold">Abilita timer di gioco</label>
+            </div>
+            
+            <div class="mb-4">
+                <label for="consonant-timer-seconds" class="block text-sm font-semibold mb-2 text-gray-700">Secondi per scegliere consonante:</label>
+                <input type="number" id="consonant-timer-seconds" min="5" max="30" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            </div>
+            
+            <div class="mb-4">
+                <label for="action-timer-seconds" class="block text-sm font-semibold mb-2 text-gray-700">Secondi per scegliere azione successiva:</label>
+                <input type="number" id="action-timer-seconds" min="3" max="15" value="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            </div>
+            
+            <div class="text-sm text-gray-500">
+                <strong>Timer consonante:</strong> Tempo per scegliere una lettera dopo aver girato la ruota.<br>
+                <strong>Timer azione:</strong> Tempo per decidere se girare ancora, comprare vocale o risolvere.
+            </div>
+        </div>
+    </div>
                     <button id="spin-btn" class="game-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500">
                         🎰 GIRA LA RUOTA
                     </button>
