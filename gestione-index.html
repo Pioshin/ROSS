@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione index.json - Frasi Ruota</title>
+  <style>
+    body { font-family: 'Baloo 2', Arial, sans-serif; background: #f7fafc; color: #222; margin: 0; padding: 2em; }
+    .container { max-width: 500px; margin: auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 2em; }
+    h1 { text-align: center; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; margin-bottom: 0.5em; }
+    li input { flex: 1; margin-right: 0.5em; }
+    button { background: #3182ce; color: #fff; border: none; border-radius: 6px; padding: 0.5em 1em; cursor: pointer; }
+    button:hover { background: #225ea8; }
+    .add-row { margin-top: 1em; text-align: center; }
+    .download { margin-top: 2em; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gestione index.json</h1>
+    <p>Aggiungi o rimuovi i nomi dei file .json delle frasi.<br>Quando hai finito, scarica il nuovo <b>index.json</b> e caricalo su GitHub.</p>
+    <ul id="file-list"></ul>
+    <div class="add-row">
+      <input type="text" id="new-file" placeholder="Nome file es: nuovo.json" />
+      <button onclick="addFile()">Aggiungi</button>
+    </div>
+    <div class="download">
+      <button onclick="downloadIndex()">Scarica index.json</button>
+    </div>
+    <div style="margin-top:1em;font-size:0.9em;color:#666;">Questa pagina funziona solo in locale.<br>Non modifica i file su GitHub automaticamente.</div>
+  </div>
+  <script>
+    // Lista iniziale (puoi incollarla qui dal tuo index.json)
+    let files = [
+      "Generico.json",
+      "Naturopatia.json",
+      "cinema.json",
+      "classico.json",
+      "esempio.json",
+      "elementare.json"
+    ];
+    function renderList() {
+      const ul = document.getElementById('file-list');
+      ul.innerHTML = '';
+      files.forEach((file, idx) => {
+        const li = document.createElement('li');
+        const input = document.createElement('input');
+        input.value = file;
+        input.onchange = e => files[idx] = e.target.value;
+        const del = document.createElement('button');
+        del.textContent = 'Rimuovi';
+        del.onclick = () => { files.splice(idx,1); renderList(); };
+        li.appendChild(input);
+        li.appendChild(del);
+        ul.appendChild(li);
+      });
+    }
+    function addFile() {
+      const val = document.getElementById('new-file').value.trim();
+      if(val && !files.includes(val)) {
+        files.push(val);
+        document.getElementById('new-file').value = '';
+        renderList();
+      }
+    }
+    function downloadIndex() {
+      const blob = new Blob([
+        JSON.stringify({ files: files }, null, 2)
+      ], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'index.json';
+      a.click();
+    }
+    renderList();
+  </script>
+</body>
+</html>
