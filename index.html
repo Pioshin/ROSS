@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROSS - Strumenti per l'Apprendimento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🌟 ROSS - Strumenti per l'Apprendimento 🌟</h1>
+        <p>Benvenuti bambini! Scegliete l'attività che volete fare oggi!</p>
+    </header>
+
+    <main class="container">
+        <div class="tools-grid">
+            <div class="tool-card" onclick="openTool('math')">
+                <div class="tool-icon">🔢</div>
+                <h3>Matematica</h3>
+                <p>Impara addizioni, sottrazioni e tabelline!</p>
+            </div>
+
+            <div class="tool-card" onclick="openTool('vocabulary')">
+                <div class="tool-icon">📚</div>
+                <h3>Parole</h3>
+                <p>Giochi con le parole e nuovi vocaboli!</p>
+            </div>
+
+            <div class="tool-card" onclick="openTool('reading')">
+                <div class="tool-icon">📖</div>
+                <h3>Lettura</h3>
+                <p>Storie e comprensione del testo!</p>
+            </div>
+
+            <div class="tool-card" onclick="openTool('games')">
+                <div class="tool-icon">🎮</div>
+                <h3>Giochi</h3>
+                <p>Giochi educativi divertenti!</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Math Tool -->
+    <div id="math-tool" class="tool-container hidden">
+        <div class="tool-header">
+            <h2>🔢 Matematica</h2>
+            <button class="back-btn" onclick="goHome()">🏠 Torna alla Home</button>
+        </div>
+        
+        <div class="math-options">
+            <button onclick="startMathGame('addition')">Addizioni ➕</button>
+            <button onclick="startMathGame('subtraction')">Sottrazioni ➖</button>
+            <button onclick="startMathGame('multiplication')">Tabelline ✖️</button>
+        </div>
+
+        <div id="math-game" class="game-area hidden">
+            <div id="question"></div>
+            <input type="number" id="answer" placeholder="Scrivi la risposta">
+            <button onclick="checkAnswer()">Controlla!</button>
+            <div id="result"></div>
+            <div id="score">Punteggio: <span id="score-value">0</span></div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Tool -->
+    <div id="vocabulary-tool" class="tool-container hidden">
+        <div class="tool-header">
+            <h2>📚 Giochi con le Parole</h2>
+            <button class="back-btn" onclick="goHome()">🏠 Torna alla Home</button>
+        </div>
+        
+        <div class="vocab-options">
+            <button onclick="startVocabGame('spelling')">Scrivi la parola 📝</button>
+            <button onclick="startVocabGame('matching')">Abbina parola-immagine 🖼️</button>
+        </div>
+
+        <div id="vocab-game" class="game-area hidden">
+            <div id="vocab-question"></div>
+            <div id="vocab-options"></div>
+            <div id="vocab-result"></div>
+            <div id="vocab-score">Parole corrette: <span id="vocab-score-value">0</span></div>
+        </div>
+    </div>
+
+    <!-- Reading Tool -->
+    <div id="reading-tool" class="tool-container hidden">
+        <div class="tool-header">
+            <h2>📖 Lettura e Comprensione</h2>
+            <button class="back-btn" onclick="goHome()">🏠 Torna alla Home</button>
+        </div>
+        
+        <div id="reading-content">
+            <div id="story-area">
+                <h3>La Piccola Stella ⭐</h3>
+                <p>C'era una volta una piccola stella di nome Luce. Luce viveva nel cielo con tante altre stelle, ma era molto timida. Ogni notte guardava la Terra e vedeva i bambini che dormivano tranquilli.</p>
+                <p>Una notte, Luce decise di brillare più forte per aiutare un bambino che aveva paura del buio. Il bambino vide la sua luce e si sentì al sicuro.</p>
+                <p>Da quella notte, Luce non fu più timida e brillò sempre forte per aiutare tutti i bambini.</p>
+            </div>
+            
+            <div id="comprehension-questions">
+                <h4>Domande sulla storia:</h4>
+                <div class="question">
+                    <p>1. Come si chiamava la stella?</p>
+                    <input type="text" id="q1" placeholder="Scrivi la risposta">
+                </div>
+                <div class="question">
+                    <p>2. Perché Luce brillò più forte?</p>
+                    <select id="q2">
+                        <option value="">Scegli la risposta</option>
+                        <option value="correct">Per aiutare un bambino</option>
+                        <option value="wrong1">Perché era felice</option>
+                        <option value="wrong2">Perché faceva freddo</option>
+                    </select>
+                </div>
+                <button onclick="checkReading()">Controlla le risposte!</button>
+                <div id="reading-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Games Tool -->
+    <div id="games-tool" class="tool-container hidden">
+        <div class="tool-header">
+            <h2>🎮 Giochi Educativi</h2>
+            <button class="back-btn" onclick="goHome()">🏠 Torna alla Home</button>
+        </div>
+        
+        <div class="games-options">
+            <button onclick="startColorGame()">Trova i Colori 🌈</button>
+            <button onclick="startMemoryGame()">Gioco della Memoria 🧠</button>
+        </div>
+
+        <div id="color-game" class="game-area hidden">
+            <h3>Clicca sul colore: <span id="color-target"></span></h3>
+            <div id="color-grid"></div>
+            <div id="color-score">Punti: <span id="color-score-value">0</span></div>
+        </div>
+
+        <div id="memory-game" class="game-area hidden">
+            <h3>Memorizza e ripeti la sequenza!</h3>
+            <div id="memory-grid"></div>
+            <button id="memory-start" onclick="startMemorySequence()">Inizia!</button>
+            <div id="memory-score">Livello: <span id="memory-level">1</span></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
