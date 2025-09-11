@@ -1,0 +1,271 @@
+    <!-- Google Fonts: Baloo 2 -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruota della Fortuna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white" style="font-family: 'Baloo 2', cursive;">
+    <!-- Header del Round -->
+    <div class="text-center py-4 bg-black/30 backdrop-blur-sm border-b border-cyan-500/30">
+        <h1 id="round-title" class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-2">Round 1</h1>
+        <p id="round-description" class="text-lg text-cyan-300">Gira la ruota e indovina le consonanti!</p>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Layout principale -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            
+            <!-- Colonna Sinistra: Ruota -->
+            <div class="xl:col-span-1 flex flex-col items-center">
+                <div class="ruota-container relative mb-6">
+                    <div id="wheel" class="wheel">
+                        <svg viewBox="0 0 600 600" class="w-full h-full">
+                            <!-- I segmenti verranno generati dinamicamente -->
+                        </svg>
+                    </div>
+                    <!-- Puntatore fisso fuori dalla ruota -->
+                    <div class="pointer"></div>
+                </div>
+                
+                <!-- Controlli Gioco -->
+                <div class="flex flex-wrap justify-center gap-3 mb-6">
+                    <button id="spin-btn" class="game-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500">
+                        🎰 GIRA LA RUOTA
+                    </button>
+                    <button id="buy-vowel-btn" class="game-btn bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500">
+                        � COMPRA VOCALE (500 punti)
+                    </button>
+                    <button id="solve-btn" class="game-btn bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500">
+                        🎯 RISOLVI
+                    </button>
+                    <button id="next-round-btn" class="game-btn bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 hidden">
+                        ➡️ PROSSIMO ROUND
+                    </button>
+                </div>
+            </div>
+
+            <!-- Colonna Centrale: Puzzle -->
+            <div class="xl:col-span-2">
+                <!-- Categoria -->
+                <div class="text-center mb-6">
+                    <div id="category" class="text-xl md:text-2xl font-bold text-yellow-400 bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-yellow-500/30">
+                        Categoria: In caricamento...
+                    </div>
+                </div>
+
+                <!-- Tabellone Puzzle -->
+                <div class="puzzle-container mb-8">
+                    <div id="puzzle-board" class="puzzle-board grid-board">
+                        <!-- Le celle verranno generate dinamicamente -->
+                    </div>
+        <style>
+        /* Tabellone adattivo stile GeneratoreDiFrasi-BIG, colori Ruota */
+        .puzzle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .grid-board {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            grid-auto-rows: 1fr;
+            gap: 8px;
+            background-color: #22223b;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 18px 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        }
+        .cell.highlight, .letter-box.highlight {
+            animation: highlight-animation 0.7s;
+        }
+        .cell, .letter-box {
+            aspect-ratio: 1 / 1;
+            background-color: #f0f4f8;
+            border: 2px solid #ffe066;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Baloo 2', cursive;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 2.5rem);
+            color: #22223b;
+            border-radius: 10px;
+            transition: transform 0.2s, background 0.2s;
+            min-width: 0;
+            min-height: 0;
+            user-select: none;
+        }
+        .cell.revealed, .letter-box.revealed {
+            background-color: #ffe066;
+            color: #22223b;
+            border-color: #ffd700;
+            animation: highlight-animation 0.7s;
+        }
+        .cell.space, .letter-box.space {
+            background: transparent;
+            border: none;
+        }
+        @keyframes highlight-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.13); }
+            100% { transform: scale(1); }
+        }
+        </style>
+                </div>
+
+                <!-- Tastiera -->
+                <div class="keyboard-container">
+                    <!-- Selettore frasi al posto del titolo -->
+                    <div class="flex justify-center items-center gap-3 mb-4">
+                        <label for="phrase-file-select" class="text-cyan-400 font-semibold">📁 Set Frasi:</label>
+                        <select id="phrase-file-select" class="px-3 py-2 rounded-lg border border-cyan-500/30 bg-black/40 text-cyan-400 font-medium">
+                            <option value="default">Frasi Default</option>
+                            <!-- Le opzioni JSON verranno caricate dinamicamente -->
+                        </select>
+                        <button id="load-phrases-btn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                            🔄 CARICA
+                        </button>
+                    </div>                    <div id="keyboard" class="keyboard">
+                        <!-- I tasti verranno generati dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Punteggi -->
+        <div class="mt-8 bg-black/40 backdrop-blur-sm rounded-lg p-6 border border-cyan-500/30">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-cyan-400">Punteggi</h2>
+                <p class="text-xs text-cyan-300/70">💡 Clicca sui nomi per modificarli</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Giocatore 1 -->
+                <div class="player-score bg-gradient-to-br from-purple-600/30 to-blue-600/30 rounded-lg p-4 border border-purple-400/30">
+                    <input type="text" id="player-0-name" value="Giocatore 1" class="player-name-input" />
+                    <div class="score-row">
+                        <span class="score-label">TOT:</span>
+                        <span id="tot-0" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">ORA:</span>
+                        <span id="ora-0" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">JOLLY:</span>
+                        <span id="jolly-0" class="jolly-count">0</span>
+                    </div>
+                </div>
+
+                <!-- Giocatore 2 -->
+                <div class="player-score bg-gradient-to-br from-green-600/30 to-teal-600/30 rounded-lg p-4 border border-green-400/30">
+                    <input type="text" id="player-1-name" value="Giocatore 2" class="player-name-input" />
+                    <div class="score-row">
+                        <span class="score-label">TOT:</span>
+                        <span id="tot-1" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">ORA:</span>
+                        <span id="ora-1" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">JOLLY:</span>
+                        <span id="jolly-1" class="jolly-count">0</span>
+                    </div>
+                </div>
+
+                <!-- Giocatore 3 -->
+                <div class="player-score bg-gradient-to-br from-red-600/30 to-pink-600/30 rounded-lg p-4 border border-red-400/30">
+                    <input type="text" id="player-2-name" value="Giocatore 3" class="player-name-input" />
+                    <div class="score-row">
+                        <span class="score-label">TOT:</span>
+                        <span id="tot-2" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">ORA:</span>
+                        <span id="ora-2" class="score-value">0 punti</span>
+                    </div>
+                    <div class="score-row">
+                        <span class="score-label">JOLLY:</span>
+                        <span id="jolly-2" class="jolly-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Popup stile MotoreRuota -->
+    <div id="popup-toast">
+        <div class="popup-content"></div>
+    </div>
+    <style>
+    #popup-toast {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.7);
+        min-width: 220px;
+        max-width: 90vw;
+        background: #1a1a2e;
+        color: #ffe066;
+        border: 4px solid #ff00c1;
+        border-radius: 20px;
+        box-shadow: 0 0 24px 4px #ff00c155, 0 2px 24px #000a, 0 0 30px #ff00c1;
+    font-family: 'Baloo 2', cursive;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        padding: 2.2rem 2.5rem 1.5rem 2.5rem;
+        opacity: 0;
+        z-index: 1000;
+        pointer-events: none;
+        transition: opacity 0.25s, transform 0.25s;
+    }
+    #popup-toast.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    #popup-toast .popup-content {
+        font-size: 2.5rem;
+        color: #facc15;
+        text-shadow: 0 0 8px #facc15, 0 0 16px #ff00c1, 0 0 2px #fff;
+        font-weight: 700;
+        margin-top: 0.5rem;
+    }
+    @media (max-width: 600px) {
+        #popup-toast { font-size: 1.1rem; padding: 1.2rem 0.7rem; }
+        #popup-toast .popup-content { font-size: 1.5rem; }
+    }
+    </style>
+
+    <!-- Overlay per risoluzione -->
+    <div id="solve-input-container" class="message-overlay hidden">
+        <div class="message-content">
+            <h3 class="text-2xl font-bold text-center mb-4 text-cyan-400">Risolvi la Frase</h3>
+            <input type="text" id="solve-input" placeholder="Inserisci la tua soluzione..." class="solve-input" />
+            <div class="flex gap-3 mt-4">
+                <button id="submit-solve-btn" class="game-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500">
+                    ✓ CONFERMA
+                </button>
+                <button id="cancel-solve-btn" class="game-btn bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500">
+                    ✗ ANNULLA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

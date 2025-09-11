@@ -1,0 +1,122 @@
+{
+  "Storia": [
+    "I romani vivevano nell'antica Roma",
+    "La scoperta dell'America nel 1492",
+    "I dinosauri abitavano la Terra",
+    "Il Colosseo è un'arena romana",
+    "Il Medioevo è un periodo di castelli",
+    "Gli antichi egizi costruivano piramidi",
+    "La caduta del muro di Berlino",
+    "L'uomo di Neanderthal",
+    "La Rivoluzione francese",
+    "La nascita della Repubblica Italiana"
+  ],
+  "Geografia": [
+    "Il fiume più lungo del mondo è il Nilo",
+    "Il continente più grande è l'Asia",
+    "L'oceano Pacifico è il più vasto",
+    "La capitale d'Italia è Roma",
+    "La Torre Eiffel a Parigi",
+    "Le Alpi sono le montagne più alte",
+    "L'Australia è un'isola continente",
+    "Il deserto del Sahara è in Africa",
+    "Il Polo Nord è la casa degli orsi polari",
+    "L'Etna è il vulcano più attivo"
+  ],
+  "Educazione Civica": [
+    "Rispettare gli altri è la prima regola",
+    "Il semaforo indica quando attraversare",
+    "L'inno nazionale è il nostro canto",
+    "I diritti dei bambini",
+    "La Costituzione è la legge più importante",
+    "La bandiera italiana ha tre colori",
+    "La raccolta differenziata è un dovere",
+    "I vigili urbani aiutano in strada",
+    "La scuola è un luogo di apprendimento",
+    "Il Parlamento fa le leggi"
+  ],
+  "Raccolta Differenziata": [
+    "La plastica va nel bidone giallo",
+    "La carta va nel bidone blu",
+    "Il vetro si ricicla all'infinito",
+    "L'organico diventa compost per la terra",
+    "L'alluminio si ricicla facilmente",
+    "Una bottiglia di plastica è una risorsa",
+    "Riciclare aiuta il pianeta",
+    "Ridurre, riusare, riciclare",
+    "Le pile scariche non vanno gettate",
+    "Il rifiuto ingombrante va all'isola ecologica"
+  ],
+  "Italiano": [
+    "Un nome proprio di persona è Paolo",
+    "L'articolo determinativo è il o la",
+    "Il verbo è l'azione della frase",
+    "La parola 'mare' è un nome comune",
+    "Un aggettivo qualifica un nome",
+    "Le vocali sono cinque",
+    "Il congiuntivo è un modo verbale",
+    "L'accento si scrive sulle parole tronche",
+    "Un sinonimo ha lo stesso significato",
+    "Il plurale di 'mano' è 'mani'"
+  ],
+  "Sport": [
+    "Il calcio è lo sport più amato",
+    "Il pugilato è uno sport da combattimento",
+    "Il nuoto è uno sport in acqua",
+    "La pallavolo si gioca con la rete",
+    "Il tennis si gioca con una racchetta",
+    "Il ciclismo si pratica in bicicletta",
+    "La pallacanestro si gioca in cinque",
+    "Il baseball con mazza e palla",
+    "La scherma si pratica con la spada",
+    "Il judo è un'arte marziale giapponese"
+  ],
+  "Cartoni Animati": [
+    "Spongebob vive in un ananas",
+    "La carica dei 101",
+    "Il gatto Silvestro cerca il topo",
+    "Tom e Jerry sono due grandi amici",
+    "I Puffi vivono in un villaggio",
+    "Peter Pan non voleva crescere",
+    "Il re leone è un film di animazione",
+    "Ladybug e Chat Noir",
+    "I Minions sono buffi e gialli",
+    "Il gatto con gli stivali"
+  ],
+  "Scienze": [
+    "La fotosintesi è la vita delle piante",
+    "La Terra gira intorno al sole",
+    "Le stagioni cambiano ogni tre mesi",
+    "Il vulcano è una montagna che erutta",
+    "Il DNA è la molecola della vita",
+    "L'acqua bolle a cento gradi",
+    "Il ciclo dell'acqua",
+    "Il sistema solare",
+    "Il ciclo della vita della farfalla",
+    "I poli magnetici della Terra"
+  ],
+  "Animali": [
+    "Il dinosauro è un grande rettile preistorico",
+    "La balena blu è un gigante del mare",
+    "Il coniglio saltella in un campo",
+    "La farfalla vola da un fiore all'altro",
+    "L'elefante ha una lunga proboscide",
+    "Il delfino nuota in branco",
+    "Il lupo ulula alla luna",
+    "Il leone ruggisce nella savana",
+    "Il pinguino cammina sul ghiaccio",
+    "La tartaruga è un rettile"
+  ],
+  "Curiosità": [
+    "Il coccodrillo è un rettile",
+    "La Statua della Libertà",
+    "Il Big Ben è un orologio a Londra",
+    "L'Australia è una grande isola",
+    "Il Grand Canyon in America",
+    "Le piramidi in Egitto",
+    "La Tour Eiffel a Parigi",
+    "Il fiume Nilo in Egitto",
+    "La muraglia cinese",
+    "La Torre di Pisa pende"
+  ]
+}
