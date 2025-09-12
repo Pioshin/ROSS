@@ -952,6 +952,9 @@ document.addEventListener('DOMContentLoaded', () => {
             popupContent.textContent = message;
         }
         popup.classList.add('show');
+        
+        // Suono di comparsa popup
+        gameAudio.playPopup();
         // Chiudi con click o dopo 2.5s
         function hide() {
             popup.classList.remove('show');
