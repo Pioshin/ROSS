@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="wheel-effects.css">
 </head>
 <body class="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen text-white" style="font-family: 'Baloo 2', cursive;">
     <!-- Header del Round -->
@@ -343,7 +344,89 @@
         </div>
     </div>
 
+    <!-- Overlay scuro per effetti ruota -->
+    <div id="spinning-overlay" class="spinning-overlay"></div>
+
+    <!-- Luci colorate intorno alla ruota -->
+    <div id="wheel-lights" class="wheel-lights">
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+        <div class="light"></div>
+    </div>
+
+    <!-- Particelle che volano -->
+    <div id="wheel-particles" class="wheel-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Luci colorate intorno al popup risultato -->
+    <div id="popup-lights" class="popup-lights">
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+        <div class="popup-light"></div>
+    </div>
+
+    <!-- Pointer gigante fisso per effetti ruota -->
+    <div id="giant-pointer" class="giant-pointer"></div>
+
+    <!-- Overlay Zoom Televisivo per Tabellone + Tastiera -->
+    <div id="puzzle-zoom-overlay" class="puzzle-zoom-overlay">
+        <div id="puzzle-zoom-container" class="puzzle-zoom-container">
+            <button id="puzzle-zoom-close" class="puzzle-zoom-close" title="Chiudi zoom">&times;</button>
+            
+            <!-- Timer zoomato (in alto a destra) -->
+            <div id="timer-zoom-container" class="timer-zoom-container" style="display: none;">
+                <div id="timer-zoom-display" class="timer-zoom-display">
+                    10
+                </div>
+            </div>
+            
+            <!-- Categoria zoomata come indizio -->
+            <div class="category-zoom-container">
+                <div id="category-zoom" class="category-zoom">
+                    Categoria: In caricamento...
+                </div>
+            </div>
+            
+            <!-- Copia del tabellone per lo zoom -->
+            <div class="puzzle-container">
+                <div id="puzzle-board-zoom" class="puzzle-board grid-board">
+                    <!-- Le celle verranno copiate qui dinamicamente -->
+                </div>
+            </div>
+            
+            <!-- Copia della tastiera per lo zoom -->
+            <div class="keyboard-container">
+                <div id="keyboard-zoom" class="keyboard">
+                    <!-- I tasti verranno copiati qui dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="gameAudio.js"></script>
+    <script src="wheel-visual-effects.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

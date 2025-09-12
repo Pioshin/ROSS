@@ -1,0 +1,631 @@
+/**
+ * Effetti Visivi Spettacolari per la Ruota della Fortuna
+ * File esterno per non corrompere il codice esistente
+ */
+
+/* Effetti durante la rotazione della ruota */
+.wheel-spinning-effects {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: min(90vw, 90vh) !important;
+    height: min(90vw, 90vh) !important;
+    z-index: 9999 !important;
+    animation: wheel-glow-pulse 0.5s infinite alternate !important;
+    filter: drop-shadow(0 0 30px #00ffff) drop-shadow(0 0 60px #ff00ff) !important;
+    /* NON sovrascriviamo transform - lasciamo che JavaScript gestisca la rotazione */
+    transform-origin: center center !important;
+    margin-left: calc(min(90vw, 90vh) / -2) !important;
+    margin-top: calc(min(90vw, 90vh) / -2) !important;
+    transition: width 0.3s ease, height 0.3s ease, margin 0.3s ease, filter 0.3s ease !important;
+}
+
+/* Mantieni la rotazione anche con gli effetti */
+.wheel-spinning-effects .wheel-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    transform-origin: center center !important;
+}
+
+/* Assicurati che la rotazione del JavaScript funzioni */
+.wheel-spinning-effects {
+    transform-origin: center center !important;
+}
+
+/* Pointer gigante fisso (non ruota con la ruota) */
+.giant-pointer {
+    position: fixed !important;
+    top: calc(50% + min(90vw, 90vh) / 2 - 40px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-left: calc(20px * (min(90vw, 90vh) / 300px)) solid transparent !important;
+    border-right: calc(20px * (min(90vw, 90vh) / 300px)) solid transparent !important;
+    border-bottom: calc(30px * (min(90vw, 90vh) / 300px)) solid #00ffff !important;
+    z-index: 10001 !important;
+    animation: rainbow-pointer 0.2s linear infinite !important;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.8)) !important;
+    opacity: 0;
+    transition: opacity 0.3s ease !important;
+}
+
+.giant-pointer.active {
+    opacity: 1 !important;
+}
+
+/* Wobble effect per il pointer gigante - MEGA amplificato */
+@keyframes giant-wobble {
+    0%, 100% { transform: translateX(-50%) rotate(0deg) translateY(0px) scale(1); }
+    15% { transform: translateX(-50%) rotate(-25deg) translateY(-8px) scale(1.2); }
+    30% { transform: translateX(-50%) rotate(25deg) translateY(-12px) scale(1.1); }
+    45% { transform: translateX(-50%) rotate(-20deg) translateY(-5px) scale(1.3); }
+    60% { transform: translateX(-50%) rotate(20deg) translateY(-10px) scale(1.15); }
+    75% { transform: translateX(-50%) rotate(-15deg) translateY(-3px) scale(1.25); }
+    90% { transform: translateX(-50%) rotate(10deg) translateY(-6px) scale(1.1); }
+}
+
+.giant-pointer.wobble {
+    animation: giant-wobble 1.5s ease-in-out !important;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 255, 1)) drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)) !important;
+}
+
+/* Animazione di pulsazione luminosa */
+@keyframes wheel-glow-pulse {
+    0% {
+        filter: 
+            drop-shadow(0 0 30px #00ffff) 
+            drop-shadow(0 0 60px #ff00ff)
+            drop-shadow(0 0 90px #ffff00);
+    }
+    100% {
+        filter: 
+            drop-shadow(0 0 50px #ff00ff) 
+            drop-shadow(0 0 80px #00ff00)
+            drop-shadow(0 0 120px #ff0080);
+    }
+}
+
+/* Overlay scuro durante la rotazione */
+.spinning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, 
+        rgba(0, 0, 0, 0.3) 0%,
+        rgba(0, 0, 0, 0.7) 40%,
+        rgba(0, 0, 0, 0.9) 100%);
+    z-index: 9998;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+.spinning-overlay.active {
+    opacity: 1;
+}
+
+/* Luci che lampeggiano intorno alla ruota */
+.wheel-lights {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(110vw, 110vh);
+    height: min(110vw, 110vh);
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.wheel-lights.active {
+    opacity: 1;
+}
+
+/* Singole luci colorate */
+.light {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    animation: flash-colors 0.3s infinite alternate;
+}
+
+/* Posizionamento delle luci in cerchio */
+.light:nth-child(1) { top: 0%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0s; }
+.light:nth-child(2) { top: 7%; left: 75%; transform: translate(-50%, -50%); animation-delay: 0.05s; }
+.light:nth-child(3) { top: 25%; left: 93%; transform: translate(-50%, -50%); animation-delay: 0.1s; }
+.light:nth-child(4) { top: 50%; left: 100%; transform: translate(-50%, -50%); animation-delay: 0.15s; }
+.light:nth-child(5) { top: 75%; left: 93%; transform: translate(-50%, -50%); animation-delay: 0.2s; }
+.light:nth-child(6) { top: 93%; left: 75%; transform: translate(-50%, -50%); animation-delay: 0.25s; }
+.light:nth-child(7) { top: 100%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0.3s; }
+.light:nth-child(8) { top: 93%; left: 25%; transform: translate(-50%, -50%); animation-delay: 0.35s; }
+.light:nth-child(9) { top: 75%; left: 7%; transform: translate(-50%, -50%); animation-delay: 0.4s; }
+.light:nth-child(10) { top: 50%; left: 0%; transform: translate(-50%, -50%); animation-delay: 0.45s; }
+.light:nth-child(11) { top: 25%; left: 7%; transform: translate(-50%, -50%); animation-delay: 0.5s; }
+.light:nth-child(12) { top: 7%; left: 25%; transform: translate(-50%, -50%); animation-delay: 0.55s; }
+
+/* Animazione delle luci colorate */
+@keyframes flash-colors {
+    0% {
+        background: #ff0000;
+        box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    }
+    16% {
+        background: #ff8800;
+        box-shadow: 0 0 20px #ff8800, 0 0 40px #ff8800;
+    }
+    33% {
+        background: #ffff00;
+        box-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00;
+    }
+    50% {
+        background: #00ff00;
+        box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+    }
+    66% {
+        background: #0088ff;
+        box-shadow: 0 0 20px #0088ff, 0 0 40px #0088ff;
+    }
+    83% {
+        background: #8800ff;
+        box-shadow: 0 0 20px #8800ff, 0 0 40px #8800ff;
+    }
+    100% {
+        background: #ff00ff;
+        box-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+    }
+}
+
+/* Particelle che volano */
+.wheel-particles {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(80vw, 80vh);
+    height: min(80vw, 80vh);
+    z-index: 9997;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.wheel-particles.active {
+    opacity: 1;
+}
+
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: particle-fly 1.5s linear infinite;
+}
+
+.particle:nth-child(odd) {
+    background: #ffff00;
+    box-shadow: 0 0 10px #ffff00;
+}
+
+.particle:nth-child(even) {
+    background: #00ffff;
+    box-shadow: 0 0 10px #00ffff;
+}
+
+/* Animazione delle particelle */
+@keyframes particle-fly {
+    0% {
+        transform: translate(0, 0) scale(0);
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--fly-x, 200px), var(--fly-y, -200px)) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Posizionamento casuale delle particelle */
+.particle:nth-child(1) { top: 40%; left: 40%; --fly-x: -300px; --fly-y: -300px; animation-delay: 0s; }
+.particle:nth-child(2) { top: 60%; left: 40%; --fly-x: -250px; --fly-y: 280px; animation-delay: 0.2s; }
+.particle:nth-child(3) { top: 40%; left: 60%; --fly-x: 280px; --fly-y: -250px; animation-delay: 0.4s; }
+.particle:nth-child(4) { top: 60%; left: 60%; --fly-x: 300px; --fly-y: 300px; animation-delay: 0.6s; }
+.particle:nth-child(5) { top: 50%; left: 30%; --fly-x: -400px; --fly-y: 0px; animation-delay: 0.8s; }
+.particle:nth-child(6) { top: 50%; left: 70%; --fly-x: 400px; --fly-y: 0px; animation-delay: 1s; }
+.particle:nth-child(7) { top: 30%; left: 50%; --fly-x: 0px; --fly-y: -400px; animation-delay: 1.2s; }
+.particle:nth-child(8) { top: 70%; left: 50%; --fly-x: 0px; --fly-y: 400px; animation-delay: 1.4s; }
+
+/* Effetto arcobaleno per il pointer */
+.wheel-spinning-effects .pointer {
+    animation: rainbow-pointer 0.2s linear infinite !important;
+}
+
+@keyframes rainbow-pointer {
+    0% { filter: hue-rotate(0deg) brightness(1.5); }
+    25% { filter: hue-rotate(90deg) brightness(1.8); }
+    50% { filter: hue-rotate(180deg) brightness(2); }
+    75% { filter: hue-rotate(270deg) brightness(1.8); }
+    100% { filter: hue-rotate(360deg) brightness(1.5); }
+}
+
+/* Ripristino dello stato normale */
+.wheel-normal {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    z-index: auto !important;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    animation: none !important;
+    filter: none !important;
+}
+
+/* Ripristina anche il pointer */
+.wheel-normal .pointer {
+    border-left-width: 20px !important;
+    border-right-width: 20px !important;
+    border-bottom-width: 30px !important;
+    bottom: -15px !important;
+    animation: none !important;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)) !important;
+    transition: all 0.5s ease !important;
+}
+
+/* === EFFETTI POPUP RISULTATO === */
+
+/* Effetti spettacolari per il popup */
+#popup-toast.popup-spectacular {
+    animation: popup-entrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+    background: linear-gradient(45deg, 
+        #ff6b6b, #4ecdc4, #45b7d1, #f39c12, 
+        #e74c3c, #9b59b6, #2ecc71, #f1c40f) !important;
+    background-size: 300% 300% !important;
+    animation: popup-entrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), 
+               rainbow-background 2s ease-in-out infinite !important;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) !important;
+}
+
+#popup-toast.popup-spectacular .popup-content {
+    color: white !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+    animation: text-sparkle 1s ease-in-out infinite alternate !important;
+}
+
+/* Luci intorno al popup - DIETRO e più allargate */
+.popup-lights {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    z-index: 999;  /* Sotto il popup (1000) */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.popup-lights.active {
+    opacity: 1;
+}
+
+.popup-light {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    animation: popup-flash-colors 0.4s infinite alternate;
+    box-shadow: 0 0 8px currentColor; /* Aggiunge un glow */
+}
+
+/* Posizionamento delle luci popup in cerchio ampio - dietro al popup */
+.popup-light:nth-child(1) { top: 5%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0s; }
+.popup-light:nth-child(2) { top: 15%; left: 85%; transform: translate(-50%, -50%); animation-delay: 0.1s; }
+.popup-light:nth-child(3) { top: 50%; left: 95%; transform: translate(-50%, -50%); animation-delay: 0.2s; }
+.popup-light:nth-child(4) { top: 85%; left: 85%; transform: translate(-50%, -50%); animation-delay: 0.3s; }
+.popup-light:nth-child(5) { top: 95%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0.4s; }
+.popup-light:nth-child(6) { top: 85%; left: 15%; transform: translate(-50%, -50%); animation-delay: 0.5s; }
+.popup-light:nth-child(7) { top: 50%; left: 5%; transform: translate(-50%, -50%); animation-delay: 0.6s; }
+.popup-light:nth-child(8) { top: 15%; left: 15%; transform: translate(-50%, -50%); animation-delay: 0.7s; }
+
+/* Animazioni popup */
+@keyframes popup-entrance {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(180deg);
+    }
+    100% {
+        transform: scale(1) rotate(360deg);
+        opacity: 1;
+    }
+}
+
+@keyframes rainbow-background {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes text-sparkle {
+    0% {
+        text-shadow: 
+            2px 2px 4px rgba(0, 0, 0, 0.8),
+            0 0 10px #fff,
+            0 0 20px #fff;
+    }
+    100% {
+        text-shadow: 
+            2px 2px 4px rgba(0, 0, 0, 0.8),
+            0 0 20px #ffff00,
+            0 0 30px #ffff00,
+            0 0 40px #ffff00;
+    }
+}
+
+@keyframes popup-flash-colors {
+    0% {
+        background: #ff1744;
+        box-shadow: 0 0 15px #ff1744;
+    }
+    20% {
+        background: #ff9100;
+        box-shadow: 0 0 15px #ff9100;
+    }
+    40% {
+        background: #ffea00;
+        box-shadow: 0 0 15px #ffea00;
+    }
+    60% {
+        background: #00e676;
+        box-shadow: 0 0 15px #00e676;
+    }
+    80% {
+        background: #2979ff;
+        box-shadow: 0 0 15px #2979ff;
+    }
+    100% {
+        background: #d500f9;
+        box-shadow: 0 0 15px #d500f9;
+    }
+}
+
+/* === EFFETTO ZOOM TELEVISIVO TABELLONE + TASTIERA === */
+
+/* Overlay scuro per lo zoom */
+.puzzle-zoom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, 
+        rgba(0, 0, 0, 0.95) 0%, 
+        rgba(20, 20, 50, 0.98) 50%, 
+        rgba(0, 0, 0, 0.95) 100%);
+    z-index: 5000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+}
+
+.puzzle-zoom-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+}
+
+/* Container per il contenuto zoomato */
+.puzzle-zoom-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.3);
+    width: 90vw;
+    height: 85vh;
+    max-width: 1200px;
+    max-height: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 5001;
+}
+
+/* Categoria zoomata */
+.category-zoom-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.category-zoom {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 3px solid #ffd700;
+    border-radius: 15px;
+    padding: 1rem 2rem;
+    color: #ffd700;
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: 'Baloo 2', cursive;
+    text-align: center;
+    box-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.4),
+        inset 0 0 20px rgba(255, 215, 0, 0.1);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    animation: category-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes category-glow {
+    0% {
+        box-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.4),
+            inset 0 0 20px rgba(255, 215, 0, 0.1);
+    }
+    100% {
+        box-shadow: 
+            0 0 30px rgba(255, 215, 0, 0.6),
+            inset 0 0 30px rgba(255, 215, 0, 0.2);
+    }
+}
+
+.puzzle-zoom-container.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Stili per il tabellone zoomato */
+.puzzle-zoom-container .puzzle-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(34, 34, 59, 0.95);
+    border-radius: 20px;
+    border: 3px solid #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    padding: 1.5rem;
+}
+
+.puzzle-zoom-container .grid-board {
+    max-width: 100%;
+    width: 100%;
+    background: transparent;
+    padding: 1rem;
+}
+
+/* Stili per la tastiera zoomata */
+.puzzle-zoom-container .keyboard-container {
+    background: rgba(34, 34, 59, 0.95);
+    border-radius: 20px;
+    border: 3px solid #ff00ff;
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+    padding: 1.5rem;
+}
+
+/* Pulsante per chiudere lo zoom */
+.puzzle-zoom-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff4757, #ff3742);
+    border: none;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    transition: all 0.3s ease;
+    z-index: 5002;
+}
+
+.puzzle-zoom-close:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+}
+
+/* Timer zoomato - in alto a sinistra */
+.timer-zoom-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 5003;
+}
+
+.timer-zoom-display {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffcc02 100%);
+    border: 4px solid #fff;
+    border-radius: 20px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', 'Baloo 2', monospace;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.8);
+    box-shadow: 
+        0 0 30px rgba(255, 107, 53, 0.8),
+        0 0 60px rgba(247, 147, 30, 0.6),
+        inset 0 0 20px rgba(255, 255, 255, 0.2);
+    animation: timer-zoom-pulse 1s ease-in-out infinite alternate;
+}
+
+.timer-zoom-display.warning {
+    background: linear-gradient(135deg, #ff1744 0%, #d50000 50%, #b71c1c 100%);
+    animation: timer-zoom-urgent 0.5s ease-in-out infinite alternate;
+    box-shadow: 
+        0 0 40px rgba(255, 23, 68, 1),
+        0 0 80px rgba(213, 0, 0, 0.8),
+        inset 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes timer-zoom-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 
+            0 0 30px rgba(255, 107, 53, 0.8),
+            0 0 60px rgba(247, 147, 30, 0.6),
+            inset 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 
+            0 0 40px rgba(255, 107, 53, 1),
+            0 0 80px rgba(247, 147, 30, 0.8),
+            inset 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+}
+
+@keyframes timer-zoom-urgent {
+    0% {
+        transform: scale(1) rotate(-2deg);
+        filter: brightness(1.2);
+    }
+    100% {
+        transform: scale(1.1) rotate(2deg);
+        filter: brightness(1.5);
+    }
+}
+
+/* Animazioni di entrata spettacolari */
+@keyframes zoom-entrance {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(180deg);
+        opacity: 0;
+        filter: blur(10px);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1) rotate(-10deg);
+        opacity: 0.8;
+        filter: blur(2px);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: blur(0px);
+    }
+}
+
+.puzzle-zoom-spectacular {
+    animation: zoom-entrance 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}

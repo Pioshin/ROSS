@@ -442,6 +442,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 void pointer.offsetWidth; // Forza il reflow
                 pointer.classList.add('wobble');
             }
+            
+            // Effetto wobble anche sul pointer gigante se attivo - MEGA POTENTE!
+            if (wheelEffects.isActive && wheelEffects.giantPointer) {
+                console.log('🎯 WOBBLE MEGA del pointer gigante durante il click!');
+                wheelEffects.giantPointer.classList.remove('wobble');
+                void wheelEffects.giantPointer.offsetWidth; // Forza il reflow
+                wheelEffects.giantPointer.classList.add('wobble');
+                
+                // Aggiungi anche un effetto flash temporaneo al puntatore
+                wheelEffects.giantPointer.style.filter = 'drop-shadow(0 0 25px rgba(255, 255, 0, 1)) drop-shadow(0 0 50px rgba(255, 0, 255, 1))';
+                setTimeout(() => {
+                    if (wheelEffects.giantPointer) {
+                        wheelEffects.giantPointer.style.filter = '';
+                    }
+                }, 200);
+                
+                console.log('Classi pointer gigante:', wheelEffects.giantPointer.className);
+            }
         } catch (error) {
             console.log('Audio non disponibile:', error);
         }
@@ -595,6 +613,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.classList.add('highlight');
             }, idx * 30);
         });
+        
+        // Sincronizza il tabellone zoomato se attivo
+        if (wheelEffects && wheelEffects.zoomActive) {
+            setTimeout(() => wheelEffects.copyPuzzleContent(), 100);
+        }
     }
 
     function spinWheel() {
@@ -615,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setGameState('SPINNING');
         wheelSpinning = true;
+        
+        // Attiva effetti visivi spettacolari!
+        wheelEffects.startSpinningEffects();
         
         const numSegments = wheelSegments.length;
         const segmentDegrees = 360 / numSegments;
@@ -638,6 +664,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Salva il risultato per dopo
         setTimeout(() => {
             wheelSpinning = false;
+            
+            // Disattiva gli effetti visivi (che includeranno il wobble finale automaticamente)
+            wheelEffects.stopSpinningEffects();
+            
             const result = wheelSegments[randomStopIndex];
             handleSpinResult(result);
             currentWheelAngle = targetAngle;
@@ -683,7 +713,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleSpinResult(result) {
-    showPopup(`${result}`, 'info');
+        // Determina il tipo di risultato per gli effetti visivi
+        let popupType = 'positive'; // default per i punti
+        if (result === 'BANCA ROTTA' || result === 'PASSAMANO' || result === 'PERDI TURNO') {
+            popupType = 'negative';
+        } else if (result === 'JOLLY') {
+            popupType = 'success';
+        }
+        
+        showPopup(`${result}`, popupType);
+        
         if (result === 'BANCA ROTTA') {
             gameAudio.playBankrupt();
             roundScores[currentPlayerIndex] = 0; // azzera ORA
@@ -706,11 +745,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Su JOLLY: il giocatore deve indovinare una consonante per riceverlo
             currentSpinValue = 'JOLLY';
             setGameState('GUESS_CONSONANT');
-            startConsonantTimer();
+            // Timer gestito da setGameState con delay per zoom
         } else {
             currentSpinValue = result;
             setGameState('GUESS_CONSONANT');
-            startConsonantTimer();
+            // Timer gestito da setGameState con delay per zoom
         }
     }
     
@@ -842,6 +881,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function setGameState(newState) {
         gameState = newState;
         updateUI();
+        
+        // Attiva zoom televisivo per gli stati di selezione lettere
+        if (newState === 'GUESS_CONSONANT' || newState === 'BUY_VOWEL' || newState === 'ONLY_VOWELS') {
+            // Delay lungo per permettere al popup di chiudersi completamente (2.5s + margin)
+            setTimeout(() => {
+                if (wheelEffects && wheelEffects.startPuzzleZoom && 
+                    (gameState === 'GUESS_CONSONANT' || gameState === 'BUY_VOWEL' || gameState === 'ONLY_VOWELS')) {
+                    wheelEffects.startPuzzleZoom();
+                    
+                    // Avvia il timer DOPO che l'animazione zoom è completata (1s + margin)
+                    setTimeout(() => {
+                        if (gameState === 'GUESS_CONSONANT') {
+                            startConsonantTimer();
+                        } else if (gameState === 'BUY_VOWEL' || gameState === 'ONLY_VOWELS') {
+                            startActionTimer();
+                        }
+                    }, 1200); // Dopo l'animazione zoom
+                }
+            }, 2800); // Dopo che il popup si è chiuso
+        } else if (wheelEffects && wheelEffects.zoomActive) {
+            // Disattiva lo zoom per altri stati
+            wheelEffects.stopPuzzleZoom();
+        }
     }
 
     function updateUI() {
@@ -892,9 +954,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             key.disabled = disabled;
         });
+        
+        // Sincronizza la tastiera zoomata se attiva
+        if (wheelEffects && wheelEffects.zoomActive) {
+            setTimeout(() => wheelEffects.copyPuzzleContent(), 50);
+        }
     }
     
     function handleKeyPress(letter) {
+        console.log('🎯 HandleKeyPress chiamata con:', letter);
         // Ferma immediatamente il timer quando si sceglie una lettera
         stopTimerSafe();
         
@@ -955,6 +1023,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Suono di comparsa popup
         gameAudio.playPopup();
+        
+        // Effetti visivi spettacolari solo per risultati positivi/successo
+        if (type === 'success' || type === 'positive') {
+            wheelEffects.startPopupEffects();
+        }
+        // Per 'error', 'negative', 'info' non ci sono effetti spettacolari
         // Chiudi con click o dopo 2.5s
         function hide() {
             popup.classList.remove('show');
@@ -1089,6 +1163,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Carica la composizione JSON personalizzata
     gameAudio.loadSong('song.json');
+
+    // --- SISTEMA EFFETTI VISIVI ---
+    // Istanza globale per gli effetti spettacolari della ruota
+    const wheelEffects = new WheelVisualEffects();
+    wheelEffects.init();
 
     // --- TIMER E IMPOSTAZIONI ---
     const settingsBtn = document.getElementById('settings-btn');
@@ -1255,11 +1334,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!timerEnabled || !timerContainer || !timerDisplay) return;
         timerDisplay.textContent = seconds;
         timerContainer.style.display = '';
+        
+        // Sincronizza anche il timer zoomato all'avvio se attivo
+        if (wheelEffects && wheelEffects.zoomActive) {
+            const zoomTimerContainer = document.getElementById('timer-zoom-container');
+            const zoomTimerDisplay = document.getElementById('timer-zoom-display');
+            if (zoomTimerContainer && zoomTimerDisplay) {
+                zoomTimerContainer.style.display = 'block';
+                zoomTimerDisplay.textContent = seconds;
+                zoomTimerDisplay.classList.remove('warning'); // Reset warning class
+            }
+        }
+        
         clearInterval(timerInterval);
         clearTimeout(timerTimeout);
         timerInterval = setInterval(() => {
             seconds--;
             timerDisplay.textContent = seconds;
+            
+            // Sincronizza timer zoomato se attivo
+            if (wheelEffects && wheelEffects.zoomActive) {
+                const zoomTimerDisplay = document.getElementById('timer-zoom-display');
+                if (zoomTimerDisplay) {
+                    zoomTimerDisplay.textContent = seconds;
+                    if (seconds <= 3 && seconds > 0) {
+                        zoomTimerDisplay.classList.add('warning');
+                    } else {
+                        zoomTimerDisplay.classList.remove('warning');
+                    }
+                }
+            }
+            
             playBeep();
             if (seconds <= 3) timerDisplay.classList.add('text-red-500');
             else timerDisplay.classList.remove('text-red-500');
@@ -1279,6 +1384,14 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(timerTimeout);
         if (timerContainer) timerContainer.style.display = 'none';
         if (timerDisplay) timerDisplay.classList.remove('text-red-500');
+        
+        // Nasconde anche il timer zoomato se attivo
+        if (wheelEffects && wheelEffects.zoomActive) {
+            const zoomTimerContainer = document.getElementById('timer-zoom-container');
+            if (zoomTimerContainer) {
+                zoomTimerContainer.style.display = 'none';
+            }
+        }
     }
     function startConsonantTimer() {
         if (!timerEnabled) return;
@@ -1313,4 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Scopri automaticamente i file JSON disponibili
     discoverPhraseFiles();
+    
+    // Esponi funzioni globalmente per la tastiera zoomata
+    window.handleKeyClick = handleKeyPress;
 });
