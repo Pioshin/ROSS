@@ -685,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleSpinResult(result) {
     showPopup(`${result}`, 'info');
         if (result === 'BANCA ROTTA') {
+            gameAudio.playBankrupt();
             roundScores[currentPlayerIndex] = 0; // azzera ORA
             updateScores();
             if (tryUseJolly('BANCA ROTTA')) {
@@ -694,6 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(passTurn, 1600);
             }
         } else if (result === 'PASSAMANO' || result === 'PERDI TURNO') { // supporta vecchio testo
+            gameAudio.playPassTurn();
             if (tryUseJolly('PASSAMANO')) {
                 setTimeout(() => setGameState('SPIN'), 1600);
             } else {
@@ -722,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Caso speciale: se si sta giocando per il JOLLY
         if (value === 'JOLLY') {
             if (count > 0) {
+                gameAudio.playJolly();
                 showPopup(`Bravo! Hai trovato ${count} "${letter}" e VINCI UN JOLLY!`, 'success');
                 renderPuzzleBoard();
                 setTimeout(() => {
@@ -742,6 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 1200);
                 }, 1200);
             } else {
+                gameAudio.playError();
                 showPopup(`La lettera "${letter}" non c'è. Niente Jolly!`, 'error');
                 setTimeout(() => {
                     if (tryUseJolly('LETTERA ERRATA')) {
@@ -759,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (count > 0) {
+            gameAudio.playSuccess();
             showPopup(`Trovata! Ci sono ${count} "${letter}".`, 'success');
             if (value) { // Se è una consonante con valore
                 roundScores[currentPlayerIndex] += count * value;
@@ -779,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 2000);
         } else {
+            gameAudio.playError();
             showPopup(`La lettera "${letter}" non c'è.`, 'error');
             if (tryUseJolly('LETTERA ERRATA')) {
                 setTimeout(() => {
@@ -814,11 +820,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function endRound() {
+        gameAudio.playWin();
         setGameState('ROUND_OVER');
         playerScores[currentPlayerIndex] += roundScores[currentPlayerIndex];
         updateScores();
         const playerName = document.getElementById(`player-${currentPlayerIndex}-name`).value;
-    showPopup(`Round completato! ${playerName} vince il montepremi del round!`, 'success');
+        showPopup(`Round completato! ${playerName} vince il montepremi del round!`, 'success');
         
         // Cambia la label del pulsante se siamo all'ultimo round
         if (currentRoundIndex === gameRounds.length - 1) {
@@ -1073,6 +1080,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Inizializzazione ---
+    // --- SISTEMA AUDIO ---
+    // Istanza globale del sistema audio (classe definita in gameAudio.js)
+    const gameAudio = new GameAudio();
+    
+    // Carica la composizione JSON personalizzata
+    gameAudio.loadSong('song.json');
+
     // --- TIMER E IMPOSTAZIONI ---
     const settingsBtn = document.getElementById('settings-btn');
     const settingsOverlay = document.getElementById('settings-overlay');
@@ -1080,6 +1094,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const enableTimerCheckbox = document.getElementById('enable-timer');
     const consonantTimerInput = document.getElementById('consonant-timer-seconds');
     const actionTimerInput = document.getElementById('action-timer-seconds');
+    
+    // Controlli audio
+    const enableAudioCheckbox = document.getElementById('enable-audio');
+    const masterVolumeSlider = document.getElementById('master-volume');
+    const effectsVolumeSlider = document.getElementById('effects-volume');
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const enableBackgroundMusicCheckbox = document.getElementById('enable-background-music');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const resetSettingsBtn = document.getElementById('reset-settings-btn');
+    
     const timerContainer = document.getElementById('timer-container');
     const timerDisplay = document.getElementById('timer-display');
 
@@ -1090,43 +1114,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerTimeout = null;
 
     function playBeep() {
-        if (!window.AudioContext && !window.webkitAudioContext) return;
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'sine';
-        o.frequency.value = 880;
-        g.gain.value = 0.2;
-        o.connect(g).connect(audioCtx.destination);
-        o.start();
-        setTimeout(() => { o.stop(); }, 120);
+        gameAudio.playTick();
     }
+    
     function playEndSound() {
-        if (!window.AudioContext && !window.webkitAudioContext) return;
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'triangle';
-        o.frequency.value = 220;
-        g.gain.value = 0.4;
-        o.connect(g).connect(audioCtx.destination);
-        o.start();
-        setTimeout(() => { o.stop(); }, 400);
+        gameAudio.playTimerEnd();
     }
     
     if (settingsBtn) {
         settingsBtn.addEventListener('click', () => {
             if (settingsOverlay) settingsOverlay.classList.remove('hidden');
+            // Carica impostazioni timer
             if (enableTimerCheckbox) enableTimerCheckbox.checked = timerEnabled;
             if (consonantTimerInput) consonantTimerInput.value = consonantTimerSeconds;
             if (actionTimerInput) actionTimerInput.value = actionTimerSeconds;
+            // Carica impostazioni audio
+            if (enableAudioCheckbox) enableAudioCheckbox.checked = gameAudio.audioEnabled;
+            if (masterVolumeSlider) masterVolumeSlider.value = gameAudio.masterVolume * 100;
+            if (effectsVolumeSlider) effectsVolumeSlider.value = gameAudio.effectsVolume * 100;
+            if (musicVolumeSlider) musicVolumeSlider.value = gameAudio.musicVolume * 100;
+            if (enableBackgroundMusicCheckbox) enableBackgroundMusicCheckbox.checked = gameAudio.backgroundMusicEnabled;
         });
     }
     if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener('click', () => {
-            // Salva le impostazioni prima di chiudere
-            if (consonantTimerInput) consonantTimerSeconds = parseInt(consonantTimerInput.value) || 10;
-            if (actionTimerInput) actionTimerSeconds = parseInt(actionTimerInput.value) || 5;
             if (settingsOverlay) settingsOverlay.classList.add('hidden');
         });
     }
@@ -1138,6 +1149,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (timerContainer) timerContainer.style.display = 'none';
             }
         });
+    }
+
+    // Funzione per salvare le impostazioni
+    function saveSettings() {
+        // Salva le impostazioni timer
+        if (consonantTimerInput) consonantTimerSeconds = parseInt(consonantTimerInput.value) || 10;
+        if (actionTimerInput) actionTimerSeconds = parseInt(actionTimerInput.value) || 5;
+        
+        // Salva le impostazioni audio
+        const audioSettings = {
+            audioEnabled: enableAudioCheckbox ? enableAudioCheckbox.checked : true,
+            masterVolume: masterVolumeSlider ? parseInt(masterVolumeSlider.value) : 50,
+            effectsVolume: effectsVolumeSlider ? parseInt(effectsVolumeSlider.value) : 70,
+            musicVolume: musicVolumeSlider ? parseInt(musicVolumeSlider.value) : 30,
+            backgroundMusicEnabled: enableBackgroundMusicCheckbox ? enableBackgroundMusicCheckbox.checked : false
+        };
+        gameAudio.updateSettings(audioSettings);
+        
+        // Salva in localStorage per persistenza
+        const allSettings = {
+            timer: {
+                enabled: timerEnabled,
+                consonantSeconds: consonantTimerSeconds,
+                actionSeconds: actionTimerSeconds
+            },
+            audio: audioSettings
+        };
+        localStorage.setItem('ruotaSettings', JSON.stringify(allSettings));
+        
+        // Feedback visivo
+        showPopup('⚙️ Impostazioni salvate!', 'info');
+    }
+
+    // Funzione per ripristinare impostazioni di default
+    function resetSettings() {
+        // Reset timer
+        timerEnabled = false;
+        consonantTimerSeconds = 10;
+        actionTimerSeconds = 5;
+        if (enableTimerCheckbox) enableTimerCheckbox.checked = false;
+        if (consonantTimerInput) consonantTimerInput.value = 10;
+        if (actionTimerInput) actionTimerInput.value = 5;
+        
+        // Reset audio
+        const defaultAudioSettings = {
+            audioEnabled: true,
+            masterVolume: 50,
+            effectsVolume: 70,
+            musicVolume: 30,
+            backgroundMusicEnabled: false
+        };
+        gameAudio.updateSettings(defaultAudioSettings);
+        
+        if (enableAudioCheckbox) enableAudioCheckbox.checked = true;
+        if (masterVolumeSlider) masterVolumeSlider.value = 50;
+        if (effectsVolumeSlider) effectsVolumeSlider.value = 70;
+        if (musicVolumeSlider) musicVolumeSlider.value = 30;
+        if (enableBackgroundMusicCheckbox) enableBackgroundMusicCheckbox.checked = false;
+        
+        // Rimuovi dalle impostazioni salvate
+        localStorage.removeItem('ruotaSettings');
+        
+        // Feedback visivo
+        showPopup('🔄 Impostazioni ripristinate!', 'info');
+    }
+
+    // Funzione per caricare impostazioni salvate
+    function loadSavedSettings() {
+        const saved = localStorage.getItem('ruotaSettings');
+        if (!saved) return;
+        
+        try {
+            const settings = JSON.parse(saved);
+            
+            // Carica impostazioni timer
+            if (settings.timer) {
+                timerEnabled = settings.timer.enabled;
+                consonantTimerSeconds = settings.timer.consonantSeconds;
+                actionTimerSeconds = settings.timer.actionSeconds;
+            }
+            
+            // Carica impostazioni audio
+            if (settings.audio) {
+                gameAudio.updateSettings(settings.audio);
+            }
+        } catch (error) {
+            console.log('Errore caricamento impostazioni:', error);
+        }
+    }
+
+    // Event listeners per i nuovi bottoni
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', saveSettings);
+    }
+    
+    if (resetSettingsBtn) {
+        resetSettingsBtn.addEventListener('click', resetSettings);
     }
     
     function startTimerSafe(seconds, onTimeout) {
@@ -1195,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     solveBtn.addEventListener('click', onPlayerActionSafe);
 
     // --- Inizializzazione ---
+    loadSavedSettings(); // Carica impostazioni salvate
     createKeyboard();
     createWheelSegments();
     setupRound();
