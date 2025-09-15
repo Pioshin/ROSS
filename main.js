@@ -1,4 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Bottone Salva nella modale Maestra
+    const maestraSaveBtn = document.getElementById('maestra-save-btn');
+    if (maestraSaveBtn) {
+        maestraSaveBtn.addEventListener('click', () => {
+            savePlayersConfig();
+            if (maestraPlayersMsg) {
+                maestraPlayersMsg.textContent = 'Salvato!';
+            }
+            // Chiudi la modale subito dopo il salvataggio
+            if (maestraPanelOverlay) {
+                setTimeout(() => {
+                    maestraPanelOverlay.classList.add('hidden');
+                    if (maestraPlayersMsg) maestraPlayersMsg.textContent = '';
+                }, 600);
+            }
+        });
+    }
     // --- VARIABILI DOM PANNELLO MAESTRA ---
     const maestraAddPlayerBtn = document.getElementById('maestra-add-player-btn');
     const maestraNewPlayerInput = document.getElementById('maestra-new-player');
@@ -13,6 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const maestraAuthError = document.getElementById('maestra-auth-error');
     const maestraPlayersList = document.getElementById('maestra-players-list');
 
+    // Variabili DOM per gestione turni
+    const maestraRoundsCountInput = document.getElementById('maestra-rounds-count');
+    const maestraRoundsList = document.getElementById('maestra-rounds-list');
+    const maestraAddRoundBtn = document.getElementById('maestra-add-round-btn');
+    const maestraSaveRoundsBtn = document.getElementById('maestra-save-rounds-btn');
+    const maestraRoundsMsg = document.getElementById('maestra-rounds-msg');
+
+    // Variabili DOM per controllo lettere
+    const maestraLettersGrid = document.getElementById('maestra-letters-grid');
+    const maestraRevealAllBtn = document.getElementById('maestra-reveal-all-btn');
+    const maestraHideAllBtn = document.getElementById('maestra-hide-all-btn');
+    const maestraResetLettersBtn = document.getElementById('maestra-reset-letters-btn');
+
     // --- STATO DEL GIOCO ---
     let playerScores = [];
     let roundScores = [];
@@ -22,10 +52,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let guessedLetters = [];
     let currentRoundIndex = 0;
     let wheelSpinning = false;
-    let currentWheelAngle = 0; 
+    let currentWheelAngle = 0;
     let allConsonantsRevealed = false;
     let currentSpinValue = null;
     let gameState = '';
+
+    // Configurazione turni di gioco
+    let gameRounds = [
+        { type: 'CLASSIC', title: 'Round 1', description: 'Gira la ruota e indovina le consonanti!' },
+        { type: 'CLASSIC', title: 'Round 2', description: 'Ancora un puzzle da risolvere!' },
+        { type: 'FINALE', title: 'Round Finale', description: 'Il vincitore gioca per il super premio!'},
+    ];
 
     // --- SALVATAGGIO E CARICAMENTO CONFIGURAZIONE GIOCATORI ---
     function savePlayersConfig() {
@@ -80,27 +117,73 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderMaestraPlayers() {
         if (!maestraPlayersList) return;
         maestraPlayersList.innerHTML = '';
+            // Intestazione colonne
+            const header = document.createElement('div');
+            header.className = 'flex gap-2 items-center mb-1';
+            header.innerHTML = `
+                <span class=\"w-40\"></span>
+                <span class=\"w-20 text-xs text-gray-700 text-center\">TOT</span>
+                <span class=\"w-20 text-xs text-gray-700 text-center\">ORA</span>
+                <span class=\"w-20\"></span>
+            `;
+            maestraPlayersList.appendChild(header);
         for (let i = 0; i < playerScores.length; i++) {
             const input = document.getElementById(`player-${i}-name`);
             const name = input ? input.value : `Giocatore ${i+1}`;
             const div = document.createElement('div');
             div.className = 'flex gap-2 items-center';
-            div.innerHTML = `<input type="text" value="${name}" data-idx="${i}" class="maestra-player-name px-2 py-1 border rounded w-40 text-gray-900" />` +
-                `<button class="maestra-remove-player px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded" data-idx="${i}">Elimina</button>`;
+            div.innerHTML = `
+                <input type=\"text\" value=\"${name}\" data-idx=\"${i}\" class=\"maestra-player-name px-2 py-1 border rounded w-40 text-gray-900\" />
+                <input type=\"number\" value=\"${playerScores[i]}\" data-idx=\"${i}\" data-type=\"tot\" class=\"maestra-player-tot px-2 py-1 border rounded w-20 text-gray-900 text-center\" min=\"0\" />
+                <input type=\"number\" value=\"${roundScores[i]}\" data-idx=\"${i}\" data-type=\"ora\" class=\"maestra-player-ora px-2 py-1 border rounded w-20 text-gray-900 text-center\" min=\"0\" />
+                <button class=\"maestra-set-turn px-2 py-1 bg-yellow-400 hover:bg-yellow-500 text-black rounded font-bold\" data-idx=\"${i}\">Turno</button>
+                <button class=\"maestra-remove-player px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded\" data-idx=\"${i}\">Elimina</button>
+            `;
+            if (typeof currentPlayerIndex !== 'undefined' && i === currentPlayerIndex) {
+                div.style.background = 'linear-gradient(90deg, #fef08a 0 10%, transparent 80%)';
+            }
             maestraPlayersList.appendChild(div);
         }
+        // Aggiorna la cornice luminosa nella griglia principale
+        // Aggiorna gli indici
+        document.querySelectorAll('.player-score').forEach((panel, i) => {
+            panel.setAttribute('data-player-index', i);
+        });
+        // Aggiorna la visualizzazione del giocatore attivo
+        updateActivePlayer();
     }
 
     // Modifica nome in tempo reale
     if (maestraPanelContent) {
-        maestraPanelContent.addEventListener('input', (e) => {
-            if (e.target.classList.contains('maestra-player-name')) {
-                const idx = parseInt(e.target.getAttribute('data-idx'));
-                const mainInput = document.getElementById(`player-${idx}-name`);
-                if (mainInput) mainInput.value = e.target.value;
-                savePlayersConfig();
-            }
-        });
+    maestraPanelContent.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'));
+        if (e.target.classList.contains('maestra-player-name')) {
+            const mainInput = document.getElementById(`player-${idx}-name`);
+            if (mainInput) mainInput.value = e.target.value;
+            savePlayersConfig();
+        } else if (e.target.classList.contains('maestra-player-tot')) {
+            const val = parseInt(e.target.value) || 0;
+            playerScores[idx] = val;
+            const totEl = document.getElementById(`tot-${idx}`);
+            if (totEl) totEl.textContent = `${val} punti`;
+            savePlayersConfig();
+        } else if (e.target.classList.contains('maestra-player-ora')) {
+            const val = parseInt(e.target.value) || 0;
+            roundScores[idx] = val;
+            const oraEl = document.getElementById(`ora-${idx}`);
+            if (oraEl) oraEl.textContent = `${val} punti`;
+            savePlayersConfig();
+        }
+    });
+    // Assegna turno
+    maestraPanelContent.addEventListener('click', (e) => {
+        if (e.target.classList.contains('maestra-set-turn')) {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            currentPlayerIndex = idx;
+            updateActivePlayer();
+            renderMaestraPlayers();
+        }
+    });
         // Elimina giocatore
         maestraPanelContent.addEventListener('click', (e) => {
             if (e.target.classList.contains('maestra-remove-player')) {
@@ -164,13 +247,186 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- FUNZIONI GESTIONE TURNI ---
+
+    function saveRoundsConfig() {
+        const roundsConfig = gameRounds.map((round, index) => ({
+            type: round.type,
+            title: round.title,
+            description: round.description
+        }));
+        localStorage.setItem('ruota_rounds', JSON.stringify(roundsConfig));
+    }
+
+    function loadRoundsConfig() {
+        const data = localStorage.getItem('ruota_rounds');
+        if (data) {
+            try {
+                const savedRounds = JSON.parse(data);
+                if (savedRounds && savedRounds.length > 0) {
+                    gameRounds = savedRounds;
+                }
+            } catch(e) {
+                console.log('Errore caricamento configurazione turni:', e);
+            }
+        }
+        // Aggiorna l'input del numero di turni
+        if (maestraRoundsCountInput) {
+            maestraRoundsCountInput.value = gameRounds.length;
+        }
+    }
+
+    function renderMaestraRounds() {
+        if (!maestraRoundsList) return;
+        maestraRoundsList.innerHTML = '';
+
+        gameRounds.forEach((round, index) => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-50 p-3 rounded-lg border';
+            div.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="font-semibold text-gray-700">Turno ${index + 1}:</span>
+                    <select data-idx="${index}" data-field="type" class="maestra-round-type px-2 py-1 border rounded text-gray-900">
+                        <option value="CLASSIC" ${round.type === 'CLASSIC' ? 'selected' : ''}>Classico</option>
+                        <option value="FINALE" ${round.type === 'FINALE' ? 'selected' : ''}>Finale</option>
+                    </select>
+                    <button class="maestra-remove-round px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs" data-idx="${index}">Elimina</button>
+                </div>
+                <div class="mb-2">
+                    <input type="text" placeholder="Titolo turno" value="${round.title}" data-idx="${index}" data-field="title" class="maestra-round-title w-full px-2 py-1 border rounded text-gray-900 text-sm" />
+                </div>
+                <div>
+                    <input type="text" placeholder="Descrizione turno" value="${round.description}" data-idx="${index}" data-field="description" class="maestra-round-description w-full px-2 py-1 border rounded text-gray-900 text-xs" />
+                </div>
+            `;
+            maestraRoundsList.appendChild(div);
+        });
+    }
+
+    function updateRoundsFromCount() {
+        const targetCount = parseInt(maestraRoundsCountInput.value) || 1;
+        const currentCount = gameRounds.length;
+
+        if (targetCount > currentCount) {
+            // Aggiungi turni
+            for (let i = currentCount; i < targetCount; i++) {
+                const isLast = (i === targetCount - 1);
+                gameRounds.push({
+                    type: isLast ? 'FINALE' : 'CLASSIC',
+                    title: isLast ? 'Round Finale' : `Round ${i + 1}`,
+                    description: isLast ? 'Il vincitore gioca per il super premio!' : 'Gira la ruota e indovina le consonanti!'
+                });
+            }
+        } else if (targetCount < currentCount) {
+            // Rimuovi turni
+            gameRounds = gameRounds.slice(0, targetCount);
+            // Assicurati che l'ultimo sia sempre di tipo FINALE se ce n'è più di uno
+            if (targetCount > 1) {
+                gameRounds[targetCount - 1].type = 'FINALE';
+                gameRounds[targetCount - 1].title = 'Round Finale';
+                gameRounds[targetCount - 1].description = 'Il vincitore gioca per il super premio!';
+            }
+        }
+
+        renderMaestraRounds();
+    }
+
+    // Event listeners per la gestione turni
+    if (maestraRoundsCountInput) {
+        maestraRoundsCountInput.addEventListener('input', updateRoundsFromCount);
+    }
+
+    if (maestraAddRoundBtn) {
+        maestraAddRoundBtn.addEventListener('click', () => {
+            const newRoundIndex = gameRounds.length;
+            gameRounds.push({
+                type: 'CLASSIC',
+                title: `Round ${newRoundIndex + 1}`,
+                description: 'Gira la ruota e indovina le consonanti!'
+            });
+            maestraRoundsCountInput.value = gameRounds.length;
+            renderMaestraRounds();
+            maestraRoundsMsg.textContent = '';
+        });
+    }
+
+    if (maestraSaveRoundsBtn) {
+        maestraSaveRoundsBtn.addEventListener('click', () => {
+            saveRoundsConfig();
+
+            // Se il round corrente è oltre il nuovo numero di turni, resetta il gioco
+            if (currentRoundIndex >= gameRounds.length) {
+                currentRoundIndex = 0;
+                setupRound();
+            }
+
+            maestraRoundsMsg.textContent = 'Configurazione turni salvata!';
+
+            // Chiudi la modale dopo il salvataggio
+            if (maestraPanelOverlay) {
+                setTimeout(() => {
+                    maestraPanelOverlay.classList.add('hidden');
+                    maestraRoundsMsg.textContent = '';
+                }, 600);
+            }
+        });
+    }
+
+    // Event listener per modifiche ai turni
+    if (maestraPanelContent) {
+        maestraPanelContent.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            const field = e.target.getAttribute('data-field');
+
+            if (e.target.classList.contains('maestra-round-type') ||
+                e.target.classList.contains('maestra-round-title') ||
+                e.target.classList.contains('maestra-round-description')) {
+
+                if (idx >= 0 && idx < gameRounds.length && field) {
+                    gameRounds[idx][field] = e.target.value;
+                    maestraRoundsMsg.textContent = '';
+                }
+            }
+        });
+
+        maestraPanelContent.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-idx'));
+            const field = e.target.getAttribute('data-field');
+
+            if (e.target.classList.contains('maestra-round-type')) {
+                if (idx >= 0 && idx < gameRounds.length && field) {
+                    gameRounds[idx][field] = e.target.value;
+                    maestraRoundsMsg.textContent = '';
+                }
+            }
+        });
+
+        maestraPanelContent.addEventListener('click', (e) => {
+            if (e.target.classList.contains('maestra-remove-round')) {
+                const idx = parseInt(e.target.getAttribute('data-idx'));
+                if (gameRounds.length > 1) {
+                    gameRounds.splice(idx, 1);
+                    maestraRoundsCountInput.value = gameRounds.length;
+                    renderMaestraRounds();
+                    maestraRoundsMsg.textContent = '';
+                } else {
+                    maestraRoundsMsg.textContent = 'Deve esserci almeno un turno.';
+                }
+            }
+        });
+    }
+
 
     // Carica la configurazione all'avvio e aggiorna la lista nella modale
     loadPlayersConfig();
+    loadRoundsConfig();
     renderMaestraPlayers();
+    renderMaestraRounds();
     if (maestraPanelBtn) {
         maestraPanelBtn.addEventListener('click', () => {
             renderMaestraPlayers();
+            renderMaestraRounds();
+            renderMaestraLetters();
             maestraPanelOverlay.classList.remove('hidden');
             maestraAuthSection.classList.add('hidden');
             maestraPanelContent.classList.remove('hidden');
@@ -277,12 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
             svg.appendChild(text);
         }
     }
-    
-    const gameRounds = [
-        { type: 'CLASSIC', title: 'Round 1', description: 'Gira la ruota e indovina le consonanti!' },
-        { type: 'CLASSIC', title: 'Round 2', description: 'Ancora un puzzle da risolvere!' },
-        { type: 'FINALE', title: 'Round Finale', description: 'Il vincitore gioca per il super premio!'},
-    ];
 
     // Frasi del gioco - ora caricate dinamicamente
     let phrases = [
@@ -1059,10 +1309,10 @@ document.addEventListener('DOMContentLoaded', () => {
             popupContent.textContent = message;
         }
         popup.classList.add('show');
-        
+
         // Suono di comparsa popup
         gameAudio.playPopup();
-        
+
         // Effetti visivi spettacolari solo per risultati positivi/successo
         if (type === 'success' || type === 'positive') {
             wheelEffects.startPopupEffects();
@@ -1075,6 +1325,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         popup.addEventListener('click', hide);
         setTimeout(hide, 2500);
+    }
+
+    // Popup finale della vittoria - resta visibile fino al click
+    function showFinalVictoryPopup(message) {
+        const popup = document.getElementById('popup-toast');
+        const popupContent = popup.querySelector('.popup-content');
+        popupContent.textContent = message;
+        popup.classList.add('show');
+
+        // Suono di comparsa popup
+        gameAudio.playPopup();
+
+        // Effetti visivi spettacolari per la vittoria
+        wheelEffects.startPopupEffects();
+
+        // Il popup rimane visibile fino al click - NO setTimeout
+        function hide() {
+            popup.classList.remove('show');
+            popup.removeEventListener('click', hide);
+        }
+        popup.addEventListener('click', hide);
     }
     
     // --- Event Listeners ---
@@ -1147,15 +1418,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 message = `Il gioco è finito in pareggio con ${maxScore} punti!`;
             }
-            showPopup(message, 'success');
+            showFinalVictoryPopup(message);
+
+            // Reset immediato del gioco
+            currentRoundIndex = 0;
+            playerScores.fill(0);
+            roundScores.fill(0);
+            playerJolly.fill(0);
+            phrases.forEach(p => delete p.used);
+            updateScores(); // Aggiorna i punteggi visualizzati
+
             // Reset state al click sul popup
             const popup = document.getElementById('popup-toast');
             popup.addEventListener('click', function handler() {
-                currentRoundIndex = 0;
-                playerScores.fill(0);
-                roundScores.fill(0);
-                playerJolly.fill(0);
-                phrases.forEach(p => delete p.used);
                 nextRoundBtn.classList.add('hidden');
                 setupRound();
                 popup.removeEventListener('click', handler);
@@ -1457,15 +1732,100 @@ document.addEventListener('DOMContentLoaded', () => {
     buyVowelBtn.addEventListener('click', onPlayerActionSafe);
     solveBtn.addEventListener('click', onPlayerActionSafe);
 
+    // --- GESTIONE LETTERE MAESTRA ---
+    function renderMaestraLetters() {
+        if (!maestraLettersGrid || !currentPhrase) return;
+
+        maestraLettersGrid.innerHTML = '';
+
+        // Crea set di lettere uniche dalla frase corrente (solo lettere)
+        const uniqueLetters = [...new Set(currentPhrase.split('').filter(char => /[A-Z]/.test(char)))].sort();
+
+        uniqueLetters.forEach(letter => {
+            const letterBtn = document.createElement('button');
+            letterBtn.className = 'px-3 py-2 border border-pink-300 rounded-lg font-bold text-lg transition-colors';
+            letterBtn.textContent = letter;
+            letterBtn.dataset.letter = letter;
+
+            // Controlla se la lettera è attualmente rivelata
+            const isRevealed = guessedLetters.includes(letter);
+            letterBtn.className += isRevealed ? ' bg-green-500 text-white' : ' bg-gray-100 text-gray-700 hover:bg-gray-200';
+
+            letterBtn.addEventListener('click', () => toggleLetter(letter));
+            maestraLettersGrid.appendChild(letterBtn);
+        });
+    }
+
+    function toggleLetter(letter) {
+        const index = guessedLetters.indexOf(letter);
+        if (index === -1) {
+            // Aggiungi la lettera se non è presente
+            guessedLetters.push(letter);
+        } else {
+            // Rimuovi la lettera se è presente
+            guessedLetters.splice(index, 1);
+        }
+
+        // Aggiorna il tabellone e la griglia lettere
+        renderPuzzleBoard();
+        renderMaestraLetters();
+    }
+
+    function revealAllLetters() {
+        // Aggiungi tutte le lettere della frase a guessedLetters
+        const allLetters = [...new Set(currentPhrase.split('').filter(char => /[A-Z]/.test(char)))];
+        allLetters.forEach(letter => {
+            if (!guessedLetters.includes(letter)) {
+                guessedLetters.push(letter);
+            }
+        });
+
+        renderPuzzleBoard();
+        renderMaestraLetters();
+    }
+
+    function hideAllLetters() {
+        // Rimuovi tutte le lettere da guessedLetters
+        guessedLetters.length = 0;
+
+        renderPuzzleBoard();
+        renderMaestraLetters();
+    }
+
+    function resetToNormalGuessing() {
+        // Reset alle lettere normalmente indovinate (consonanti già giocate)
+        // Per ora manteniamo solo le vocali comprate e le consonanti indovinate correttamente
+        // Questa logica può essere migliorata in base alle regole del gioco
+        hideAllLetters();
+    }
+
+    function saveRoundsConfig() {
+        localStorage.setItem('ruota_rounds', JSON.stringify(gameRounds));
+    }
+
+    // Event listeners per controllo lettere
+    if (maestraRevealAllBtn) {
+        maestraRevealAllBtn.addEventListener('click', revealAllLetters);
+    }
+
+    if (maestraHideAllBtn) {
+        maestraHideAllBtn.addEventListener('click', hideAllLetters);
+    }
+
+    if (maestraResetLettersBtn) {
+        maestraResetLettersBtn.addEventListener('click', resetToNormalGuessing);
+    }
+
+
     // --- Inizializzazione ---
     loadSavedSettings(); // Carica impostazioni salvate
     createKeyboard();
     createWheelSegments();
     setupRound();
-    
+
     // Scopri automaticamente i file JSON disponibili
     discoverPhraseFiles();
-    
+
     // Esponi funzioni globalmente per la tastiera zoomata
     window.handleKeyClick = handleKeyPress;
 });
