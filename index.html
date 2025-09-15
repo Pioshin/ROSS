@@ -213,6 +213,9 @@
                         <button id="load-phrases-btn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
                             🔄 CARICA
                         </button>
+                        <button id="maestra-panel-btn" class="px-3 py-2 bg-pink-400 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors ml-2 opacity-70 hover:opacity-100" title="Pannello della Maestra">
+                            👩‍🏫 Maestra
+                        </button>
                     </div>                    <div id="keyboard" class="keyboard">
                         <!-- I tasti verranno generati dinamicamente -->
                     </div>
@@ -428,5 +431,29 @@
     <script src="gameAudio.js"></script>
     <script src="wheel-visual-effects.js"></script>
     <script src="main.js"></script>
+    <!-- Overlay Pannello della Maestra -->
+    <div id="maestra-panel-overlay" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] hidden">
+        <div class="bg-white text-gray-900 rounded-xl shadow-2xl p-8 w-full max-w-lg relative">
+            <button id="close-maestra-panel" class="absolute top-2 right-2 text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            <h2 class="text-2xl font-bold mb-6 text-pink-700">Pannello della Maestra</h2>
+            <div id="maestra-auth-section">
+                <label for="maestra-password" class="block text-lg font-semibold mb-2 text-pink-700">Password:</label>
+                <input type="password" id="maestra-password" class="w-full px-3 py-2 border border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 mb-4">
+                <button id="maestra-auth-btn" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-semibold transition-colors w-full">Accedi</button>
+                <div id="maestra-auth-error" class="text-red-500 mt-2 hidden">Password errata!</div>
+            </div>
+            <div id="maestra-panel-content" class="hidden">
+                <h3 class="text-xl font-bold mb-4 text-pink-700">Gestione Giocatori</h3>
+                <div id="maestra-players-list" class="mb-4 space-y-2">
+                    <!-- Lista giocatori generata via JS -->
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <input id="maestra-new-player" type="text" placeholder="Nuovo giocatore" class="flex-1 px-3 py-2 border border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <button id="maestra-add-player-btn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold">Aggiungi</button>
+                </div>
+                <div id="maestra-players-msg" class="text-sm text-pink-600"></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,4 +1,186 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- VARIABILI DOM PANNELLO MAESTRA ---
+    const maestraAddPlayerBtn = document.getElementById('maestra-add-player-btn');
+    const maestraNewPlayerInput = document.getElementById('maestra-new-player');
+    const maestraPlayersMsg = document.getElementById('maestra-players-msg');
+    const maestraPanelBtn = document.getElementById('maestra-panel-btn');
+    const maestraPanelOverlay = document.getElementById('maestra-panel-overlay');
+    const closeMaestraPanelBtn = document.getElementById('close-maestra-panel');
+    const maestraAuthSection = document.getElementById('maestra-auth-section');
+    const maestraPanelContent = document.getElementById('maestra-panel-content');
+    const maestraAuthBtn = document.getElementById('maestra-auth-btn');
+    const maestraPasswordInput = document.getElementById('maestra-password');
+    const maestraAuthError = document.getElementById('maestra-auth-error');
+    const maestraPlayersList = document.getElementById('maestra-players-list');
+
+    // --- STATO DEL GIOCO ---
+    let playerScores = [];
+    let roundScores = [];
+    let playerJolly = [];
+    let currentPlayerIndex = 0;
+    let currentPhrase = '';
+    let guessedLetters = [];
+    let currentRoundIndex = 0;
+    let wheelSpinning = false;
+    let currentWheelAngle = 0; 
+    let allConsonantsRevealed = false;
+    let currentSpinValue = null;
+    let gameState = '';
+
+    // --- SALVATAGGIO E CARICAMENTO CONFIGURAZIONE GIOCATORI ---
+    function savePlayersConfig() {
+        const players = [];
+        for (let i = 0; i < playerScores.length; i++) {
+            const input = document.getElementById(`player-${i}-name`);
+            players.push({
+                name: input ? input.value : `Giocatore ${i+1}`,
+                tot: playerScores[i],
+                ora: roundScores[i],
+                jolly: playerJolly[i]
+            });
+        }
+        localStorage.setItem('ruota_players', JSON.stringify(players));
+    }
+
+    function loadPlayersConfig() {
+        const data = localStorage.getItem('ruota_players');
+        let players = [];
+        if (data) {
+            try {
+                players = JSON.parse(data);
+            } catch(e) { players = []; }
+        }
+        if (!players || players.length === 0) {
+            players = [{ name: 'Giocatore 1', tot: 0, ora: 0, jolly: 0 }];
+        }
+        playerScores = [];
+        roundScores = [];
+        playerJolly = [];
+        document.querySelectorAll('.player-score').forEach(el => el.remove());
+    const scoresDiv = document.querySelector('.player-score')?.parentElement || document.querySelector('.grid');
+        players.forEach((p, i) => {
+            playerScores.push(p.tot);
+            roundScores.push(p.ora);
+            playerJolly.push(p.jolly);
+            if (scoresDiv) {
+                const newDiv = document.createElement('div');
+                newDiv.className = 'player-score bg-gradient-to-br from-gray-600/30 to-blue-600/30 rounded-lg p-4 border border-gray-400/30';
+                newDiv.innerHTML = `
+                    <input type="text" id="player-${i}-name" value="${p.name}" class="player-name-input" />
+                    <div class="score-row"><span class="score-label">TOT:</span> <span id="tot-${i}" class="score-value">${p.tot} punti</span></div>
+                    <div class="score-row"><span class="score-label">ORA:</span> <span id="ora-${i}" class="score-value">${p.ora} punti</span></div>
+                    <div class="score-row"><span class="score-label">JOLLY:</span> <span id="jolly-${i}" class="jolly-count">${p.jolly}</span></div>
+                `;
+                scoresDiv.appendChild(newDiv);
+            }
+        });
+    }
+
+    // Funzione aggiornata per gestire dinamicamente la lista
+    function renderMaestraPlayers() {
+        if (!maestraPlayersList) return;
+        maestraPlayersList.innerHTML = '';
+        for (let i = 0; i < playerScores.length; i++) {
+            const input = document.getElementById(`player-${i}-name`);
+            const name = input ? input.value : `Giocatore ${i+1}`;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center';
+            div.innerHTML = `<input type="text" value="${name}" data-idx="${i}" class="maestra-player-name px-2 py-1 border rounded w-40 text-gray-900" />` +
+                `<button class="maestra-remove-player px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded" data-idx="${i}">Elimina</button>`;
+            maestraPlayersList.appendChild(div);
+        }
+    }
+
+    // Modifica nome in tempo reale
+    if (maestraPanelContent) {
+        maestraPanelContent.addEventListener('input', (e) => {
+            if (e.target.classList.contains('maestra-player-name')) {
+                const idx = parseInt(e.target.getAttribute('data-idx'));
+                const mainInput = document.getElementById(`player-${idx}-name`);
+                if (mainInput) mainInput.value = e.target.value;
+                savePlayersConfig();
+            }
+        });
+        // Elimina giocatore
+        maestraPanelContent.addEventListener('click', (e) => {
+            if (e.target.classList.contains('maestra-remove-player')) {
+                const idx = parseInt(e.target.getAttribute('data-idx'));
+                if (playerScores.length > 1) {
+                    playerScores.splice(idx, 1);
+                    roundScores.splice(idx, 1);
+                    playerJolly.splice(idx, 1);
+
+                    // Rimuovi il pannello punteggio corrispondente
+                    const scorePanel = document.querySelector(`.player-score[data-player-index="${idx}"]`);
+                    if (scorePanel) scorePanel.remove();
+
+                    // Aggiorna gli indici e gli ID degli elementi DOM rimanenti
+                    document.querySelectorAll('.player-score').forEach((panel, newIdx) => {
+                        panel.dataset.playerIndex = newIdx;
+                        panel.querySelector('.player-name-input').id = `player-${newIdx}-name`;
+                        panel.querySelector('.score-value').id = `tot-${newIdx}`;
+                        panel.querySelectorAll('.score-value')[1].id = `ora-${newIdx}`;
+                        panel.querySelector('.jolly-count').id = `jolly-${newIdx}`;
+                    });
+                    renderMaestraPlayers();
+                    maestraPlayersMsg.textContent = '';
+                    savePlayersConfig();
+                } else {
+                    maestraPlayersMsg.textContent = 'Deve esserci almeno un giocatore.';
+                }
+            }
+        });
+    }
+    // Aggiungi giocatore
+    if (maestraAddPlayerBtn) {
+        maestraAddPlayerBtn.addEventListener('click', () => {
+            const newName = maestraNewPlayerInput.value.trim();
+            if (newName) {
+                playerScores.push(0);
+                roundScores.push(0);
+                playerJolly.push(0);
+                // Crea nuovo input DOM
+                // Selettore valido per la griglia dei giocatori (usa solo la prima griglia con classe player-score)
+                const scoresDiv = document.querySelector('.player-score')?.parentElement || document.querySelector('.grid');
+                if (scoresDiv) {
+                    const idx = playerScores.length - 1;
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'player-score bg-gradient-to-br from-gray-600/30 to-blue-600/30 rounded-lg p-4 border border-gray-400/30';
+                    newDiv.innerHTML = `
+                        <input type="text" id="player-${idx}-name" value="${newName}" class="player-name-input" />
+                        <div class="score-row"><span class="score-label">TOT:</span> <span id="tot-${idx}" class="score-value">0 punti</span></div>
+                        <div class="score-row"><span class="score-label">ORA:</span> <span id="ora-${idx}" class="score-value">0 punti</span></div>
+                        <div class="score-row"><span class="score-label">JOLLY:</span> <span id="jolly-${idx}" class="jolly-count">0</span></div>
+                    `;
+                    scoresDiv.appendChild(newDiv);
+                }
+                renderMaestraPlayers();
+                maestraNewPlayerInput.value = '';
+                maestraPlayersMsg.textContent = '';
+                savePlayersConfig();
+            } else {
+                maestraPlayersMsg.textContent = 'Inserisci un nome valido.';
+            }
+        });
+    }
+
+
+    // Carica la configurazione all'avvio e aggiorna la lista nella modale
+    loadPlayersConfig();
+    renderMaestraPlayers();
+    if (maestraPanelBtn) {
+        maestraPanelBtn.addEventListener('click', () => {
+            renderMaestraPlayers();
+            maestraPanelOverlay.classList.remove('hidden');
+            maestraAuthSection.classList.add('hidden');
+            maestraPanelContent.classList.remove('hidden');
+        });
+    }
+    if (closeMaestraPanelBtn) {
+        closeMaestraPanelBtn.addEventListener('click', () => {
+            maestraPanelOverlay.classList.add('hidden');
+        });
+    }
     const solveInput = document.getElementById('solve-input');
     // Costanti lettere italiane
     const CONSONANTS = [
@@ -24,21 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const roundTitle = document.getElementById('round-title');
     const roundDescription = document.getElementById('round-description');
-    
-    // Stato del gioco
-    let playerScores = [0, 0, 0]; // TOT
-    let roundScores = [0, 0, 0];  // ORA
-    let playerJolly = [0, 0, 0];
-    let currentPlayerIndex = 0;
-    let currentPhrase = '';
-    let guessedLetters = [];
-    let currentRoundIndex = 0;
-    let wheelSpinning = false;
-
-    let currentWheelAngle = 0; 
-    let allConsonantsRevealed = false;
-    let currentSpinValue = null;
-    let gameState = '';
     
     // Variabili per l'audio e l'animazione realistica
     let audioCtx = null;
@@ -151,215 +318,88 @@ document.addEventListener('DOMContentLoaded', () => {
     async function discoverPhraseFiles() {
         try {
             const select = document.getElementById('phrase-file-select');
+            if (!select) return;
+    
             const availableFiles = [];
             const foundNames = new Set();
-            console.log('🔍 Tentativo di lettura directory phrases/ dal server...');
-            // Prima prova a caricare l'indice dei file (per GitHub Pages)
+    
+            // Helper function to process a filename
+            const processFile = async (filename) => {
+                if (filename === 'index.json' || foundNames.has(filename)) {
+                    return;
+                }
+                foundNames.add(filename);
+                try {
+                    const response = await fetch(`phrases/${filename}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0) {
+                            availableFiles.push({
+                                path: `phrases/${filename}`,
+                                name: filename.replace('.json', '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                filename: filename
+                            });
+                            console.log(`✅ ${filename} caricato e valido.`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ Errore durante l'elaborazione di ${filename}:`, error);
+                }
+            };
+    
+            // 1. Prova a caricare `index.json` (ideale per GitHub Pages)
             try {
                 const indexResponse = await fetch('phrases/index.json');
                 if (indexResponse.ok) {
                     const indexData = await indexResponse.json();
-                    const jsonFiles = indexData.files || [];
-                    for (const filename of jsonFiles.sort()) {
-                        if (filename === 'index.json') continue;
-                        foundNames.add(filename);
-                        try {
-                            const jsonResponse = await fetch(`phrases/${filename}`);
-                            if (jsonResponse.ok) {
-                                const data = await jsonResponse.json();
-                                if (typeof data === 'object' && !Array.isArray(data)) {
-                                    const categories = Object.keys(data);
-                                    if (categories.length > 0) {
-                                        const fileInfo = {
-                                            path: `phrases/${filename}`,
-                                            name: filename.replace('.json', '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                                            filename: filename
-                                        };
-                                        availableFiles.push(fileInfo);
-                                        console.log(`✅ ${filename} caricato correttamente`);
-                                    }
-                                }
-                            }
-                        } catch (error) {
-                            console.warn(`⚠️ Errore caricando ${filename}:`, error);
-                        }
+                    console.log('📁 Trovato index.json, elaborazione file...');
+                    for (const filename of (indexData.files || [])) {
+                        await processFile(filename);
                     }
                 }
             } catch (indexError) {
-                console.log('📁 Index.json non disponibile, provo directory listing...');
+                console.log('ℹ️ index.json non trovato, si procede con altri metodi.');
             }
-            // In ogni caso, aggiungi anche tutti i file .json realmente presenti nella cartella (se il server lo permette)
+    
+            // 2. Prova a ottenere un directory listing (funziona su alcuni server)
             try {
                 const dirResponse = await fetch('phrases/');
                 if (dirResponse.ok) {
                     const dirHTML = await dirResponse.text();
                     const regex = /href="([^"/]+\.json)"/gi;
                     let match;
+                    console.log('📁 Trovato directory listing, elaborazione file...');
                     while ((match = regex.exec(dirHTML)) !== null) {
-                        const filename = match[1];
-                        if (filename === 'index.json') continue;
-                        if (!foundNames.has(filename)) {
-                            foundNames.add(filename);
-                            try {
-                                const jsonResponse = await fetch(`phrases/${filename}`);
-                                if (jsonResponse.ok) {
-                                    const data = await jsonResponse.json();
-                                    if (typeof data === 'object' && !Array.isArray(data)) {
-                                        const categories = Object.keys(data);
-                                        if (categories.length > 0) {
-                                            const fileInfo = {
-                                                path: `phrases/${filename}`,
-                                                name: filename.replace('.json', '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                                                filename: filename
-                                            };
-                                            availableFiles.push(fileInfo);
-                                            console.log(`✅ ${filename} caricato correttamente (directory)`);
-                                        }
-                                    }
-                                }
-                            } catch (error) {
-                                console.warn(`⚠️ Errore caricando ${filename}:`, error);
-                            }
-                        }
+                        await processFile(match[1]);
                     }
                 }
             } catch (dirError) {
-                console.log('📁 Directory listing non disponibile o non supportata.');
+                console.log('ℹ️ Directory listing non disponibile.');
             }
-            // Popola il selettore
-            if (availableFiles.length > 0) {
-                availableFiles.sort((a, b) => a.filename.localeCompare(b.filename));
-                availableFiles.forEach(file => {
-                    const option = document.createElement('option');
-                    option.value = file.path;
-                    option.textContent = file.name;
-                    select.appendChild(option);
-                });
-                console.log(`🎯 Discovery completata: ${availableFiles.length} file trovati:`, availableFiles.map(f => f.filename));
-                const successDiv = document.createElement('div');
-                successDiv.className = 'fixed top-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50';
-                successDiv.textContent = `🎉 Auto-discovery: ${availableFiles.length} set di frasi trovati!`;
-                document.body.appendChild(successDiv);
-                setTimeout(() => successDiv.remove(), 4000);
-                return;
-            }
-            
-            try {
-                // Prova a fare una richiesta alla directory per ottenere il listing
-                const dirResponse = await fetch('phrases/');
-                if (dirResponse.ok) {
-                    const dirHTML = await dirResponse.text();
-                    
-                    // Estrai i nomi dei file .json dal HTML della directory listing
-                    const jsonFiles = [];
-                    const regex = /href="([^"]*\.json)"/gi;
-                    let match;
-                    
-                    while ((match = regex.exec(dirHTML)) !== null) {
-                        const filename = match[1];
-                        if (!filename.includes('/') && filename.endsWith('.json')) {
-                            jsonFiles.push(filename);
-                        }
-                    }
-                    
-                    console.log(`📂 Directory listing trovato! File JSON: ${jsonFiles.length}`);
-                    
-                    // Carica informazioni per ogni file trovato
-                    for (const filename of jsonFiles.sort()) {
-                        try {
-                            console.log(`📄 Caricamento ${filename}...`);
-                            const jsonResponse = await fetch(`phrases/${filename}`);
-                            if (jsonResponse.ok) {
-                                const data = await jsonResponse.json();
-                                
-                                // Verifica formato valido
-                                if (typeof data === 'object' && !Array.isArray(data)) {
-                                    const categories = Object.keys(data);
-                                    if (categories.length > 0) {
-                                        const fileInfo = {
-                                            path: `phrases/${filename}`,
-                                            name: filename
-                                                .replace('.json', '')
-                                                .replace(/[-_]/g, ' ')
-                                                .replace(/\b\w/g, l => l.toUpperCase()),
-                                            filename: filename
-                                        };
-                                        availableFiles.push(fileInfo);
-                                        console.log(`✅ ${filename} caricato correttamente`);
-                                    }
-                                }
-                            }
-                        } catch (error) {
-                            console.warn(`⚠️ Errore caricando ${filename}:`, error);
-                        }
-                    }
-                } else {
-                    throw new Error('Directory listing non disponibile');
-                }
-            } catch (dirError) {
-                console.log('� Directory listing non disponibile, uso metodo di fallback...');
-                
-                // Fallback: prova i file che sappiamo esistere
-                const commonFiles = [
-                    'Generico.json', 'Naturopatia.json', 'cinema.json', 'classico.json', 'esempio.json'
-                ];
-                
-                for (const filename of commonFiles) {
-                    try {
-                        const response = await fetch(`phrases/${filename}`, { method: 'HEAD' });
-                        if (response.ok) {
-                            const jsonResponse = await fetch(`phrases/${filename}`);
-                            if (jsonResponse.ok) {
-                                const data = await jsonResponse.json();
-                                if (typeof data === 'object' && !Array.isArray(data)) {
-                                    const categories = Object.keys(data);
-                                    if (categories.length > 0) {
-                                        availableFiles.push({
-                                            path: `phrases/${filename}`,
-                                            name: filename.replace('.json', '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                                            filename: filename
-                                        });
-                                        console.log(`✅ Fallback: trovato ${filename}`);
-                                    }
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        // Continua silenziosamente
-                    }
-                }
-            }
-            
-            // Ordina per nome file
+    
+            // 3. Popola il selettore e mostra un messaggio
             availableFiles.sort((a, b) => a.filename.localeCompare(b.filename));
-            
-            // Popola il selettore
             availableFiles.forEach(file => {
                 const option = document.createElement('option');
                 option.value = file.path;
                 option.textContent = file.name;
                 select.appendChild(option);
             });
-            
+    
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'fixed top-4 left-4 px-4 py-2 rounded-lg z-50';
             if (availableFiles.length > 0) {
-                console.log(`🎯 Discovery completata: ${availableFiles.length} file trovati:`, 
-                    availableFiles.map(f => f.filename));
-                
-                const successDiv = document.createElement('div');
-                successDiv.className = 'fixed top-4 left-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50';
-                successDiv.textContent = `🎉 Auto-discovery: ${availableFiles.length} set di frasi trovati!`;
-                document.body.appendChild(successDiv);
-                setTimeout(() => successDiv.remove(), 4000);
+                console.log(`🎯 Discovery completata: ${availableFiles.length} file trovati.`, availableFiles.map(f => f.filename));
+                messageDiv.classList.add('bg-green-500', 'text-white');
+                messageDiv.textContent = `🎉 Auto-discovery: ${availableFiles.length} set di frasi trovati!`;
             } else {
-                console.log('📁 Nessun file JSON valido trovato in phrases/');
-                
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'fixed top-4 left-4 bg-blue-500 text-white px-4 py-2 rounded-lg z-50';
-                infoDiv.textContent = '📁 Aggiungi file .json nella cartella phrases/';
-                document.body.appendChild(infoDiv);
-                setTimeout(() => infoDiv.remove(), 4000);
+                console.warn('📁 Nessun file JSON valido trovato. Usando frasi di default.');
+                messageDiv.classList.add('bg-yellow-500', 'text-white');
+                messageDiv.textContent = 'Nessun set di frasi trovato. Aggiungi file .json in /phrases/.';
             }
-            
+            document.body.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 4000);
+    
         } catch (error) {
             console.error('❌ Errore nella discovery automatica:', error);
         }
@@ -486,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryDisplay.textContent = `Categoria: ${phraseData.category}`;
         
         guessedLetters = [];
-        roundScores = [0, 0, 0];
+        roundScores = Array(playerScores.length).fill(0);
         allConsonantsRevealed = false;
         renderPuzzleBoard();
         updateKeyboard();
@@ -510,14 +550,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateActivePlayer() {
         // Rimuovi la classe active da tutti i giocatori
-        for (let i = 0; i < 3; i++) {
-            const playerBox = document.querySelector(`.player-score:nth-child(${i + 1})`);
+        document.querySelectorAll('.player-score').forEach(playerBox => {
             if (playerBox) playerBox.classList.remove('active');
-        }
+        });
         
         // Aggiungi la classe active al giocatore corrente
-        const activePlayerBox = document.querySelector(`.player-score:nth-child(${currentPlayerIndex + 1})`);
-        if (activePlayerBox) activePlayerBox.classList.add('active');
+        const activePlayerBox = document.querySelector(`.player-score[data-player-index="${currentPlayerIndex}"]`);
+        activePlayerBox?.classList.add('active');
     }
     
     function renderPuzzleBoard() {
@@ -1113,9 +1152,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const popup = document.getElementById('popup-toast');
             popup.addEventListener('click', function handler() {
                 currentRoundIndex = 0;
-                playerScores = [0, 0, 0];
-                roundScores = [0, 0, 0];
-                playerJolly = [0, 0, 0];
+                playerScores.fill(0);
+                roundScores.fill(0);
+                playerJolly.fill(0);
                 phrases.forEach(p => delete p.used);
                 nextRoundBtn.classList.add('hidden');
                 setupRound();
