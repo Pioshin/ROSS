@@ -488,9 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const wheelConfigs = {
 
-        ROUND1: [300, 350, 400, 'PASSAMANO', 450, 500, 550, 'JOLLY', 600, 650, 'BANCA ROTTA', 700, 750, 800, 850, 900, 300, 400, 500, 600, 700, 800, 900, 'PASSAMANO'],
-        ROUND2: [400, 450, 500, 'PASSAMANO', 550, 600, 650, 'JOLLY', 700, 750, 'BANCA ROTTA', 800, 850, 900, 950, 1000, 450, 550, 650, 750, 850, 950, 1000, 'PASSAMANO'],
-        FINALE: [500, 600, 700, 'PASSAMANO', 800, 900, 1000, 'JOLLY', 1100, 1200, 'BANCA ROTTA', 1300, 900, 1000, 1100, 1200, 700, 800, 900, 1000, 1100, 1200, 1300, 'PASSAMANO']
+        ROUND1: [250, 300, 350, 'PASSA IL TURNO', 400, 450, 500, 'SUPER JOLLY', 550, 600, 'PERDI TUTTO', 650, 700, 750, 800, 'BONUS', 300, 400, 500, 600, 700, 800, 'GIRA ANCORA', 'RADDOPPIA'],
+        ROUND2: [350, 400, 450, 'PASSA IL TURNO', 500, 550, 600, 'MEGA JOLLY', 650, 700, 'AZZERA PUNTI', 750, 800, 850, 900, 950, 'PREMIO', 400, 500, 600, 750, 850, 'FORTUNA', 'X2'],
+        FINALE: [500, 750, 1000, 'PASSA IL TURNO', 1250, 1500, 'JACKPOT', 2000, 2500, 'GAME OVER', 3000, 1000, 1500, 2000, 2500, 'VITTORIA', 750, 1000, 1250, 1500, 2000, 'SUPER BONUS', 'MAX PUNTI', 'CAMPIONE']
     };
     let wheelSegments = [];
     
@@ -775,10 +775,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const round = gameRounds[currentRoundIndex];
         roundTitle.textContent = round.title;
         roundDescription.textContent = round.description;
-        // Scegli ruota per round
-        if (round.type === 'FINALE') wheelSegments = wheelConfigs.FINALE;
-        else if (currentRoundIndex === 0) wheelSegments = wheelConfigs.ROUND1;
-        else wheelSegments = wheelConfigs.ROUND2;
+        // Scegli ruota per round - solo se non c'è una configurazione personalizzata attiva
+        const activeWheel = localStorage.getItem('ruota_wheel_active');
+        if (activeWheel !== 'custom') {
+            if (round.type === 'FINALE') wheelSegments = wheelConfigs.FINALE;
+            else if (currentRoundIndex === 0) wheelSegments = wheelConfigs.ROUND1;
+            else wheelSegments = wheelConfigs.ROUND2;
+        }
+        // Se c'è una ruota personalizzata attiva, wheelSegments è già impostato dal caricamento
         createWheelSegments();
         
         // Scegli una frase casuale che non sia già stata usata
