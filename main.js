@@ -43,6 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const maestraHideAllBtn = document.getElementById('maestra-hide-all-btn');
     const maestraResetLettersBtn = document.getElementById('maestra-reset-letters-btn');
 
+    // Variabili DOM per personalizzazione ruota
+    const maestraWheelType = document.getElementById('maestra-wheel-type');
+    const maestraSegmentsCount = document.getElementById('maestra-segments-count');
+    const maestraSegmentsGrid = document.getElementById('maestra-segments-grid');
+    const maestraApplyWheelBtn = document.getElementById('maestra-apply-wheel-btn');
+    const maestraResetWheelBtn = document.getElementById('maestra-reset-wheel-btn');
+    const maestraSaveWheelBtn = document.getElementById('maestra-save-wheel-btn');
+    const maestraWheelMsg = document.getElementById('maestra-wheel-msg');
+
     // --- STATO DEL GIOCO ---
     let playerScores = [];
     let roundScores = [];
@@ -63,6 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { type: 'CLASSIC', title: 'Round 2', description: 'Ancora un puzzle da risolvere!' },
         { type: 'FINALE', title: 'Round Finale', description: 'Il vincitore gioca per il super premio!'},
     ];
+
+    // Configurazione personalizzata della ruota
+    let customWheelConfig = null;
 
     // --- SALVATAGGIO E CARICAMENTO CONFIGURAZIONE GIOCATORI ---
     function savePlayersConfig() {
@@ -427,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMaestraPlayers();
             renderMaestraRounds();
             renderMaestraLetters();
+            renderMaestraWheel();
             maestraPanelOverlay.classList.remove('hidden');
             maestraAuthSection.classList.add('hidden');
             maestraPanelContent.classList.remove('hidden');
@@ -523,9 +536,10 @@ document.addEventListener('DOMContentLoaded', () => {
             text.setAttribute('x', tx);
             text.setAttribute('y', ty);
             text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
             text.setAttribute('font-family', 'Orbitron');
             text.setAttribute('font-weight', 'bold');
-            text.setAttribute('font-size', Math.max(size * 0.045, 12));
+            text.setAttribute('font-size', Math.max(size * 0.035, 10));
             text.setAttribute('fill', '#000');
             // Ruota la parola di 90° rispetto al centro
             text.setAttribute('transform', `rotate(${textAngleDeg + 180} ${tx} ${ty})`);
@@ -1816,9 +1830,182 @@ document.addEventListener('DOMContentLoaded', () => {
         maestraResetLettersBtn.addEventListener('click', resetToNormalGuessing);
     }
 
+    // --- GESTIONE PERSONALIZZAZIONE RUOTA ---
+    function renderMaestraWheel() {
+        if (!maestraWheelType || !maestraSegmentsGrid) return;
+
+        // Determina la configurazione attuale della ruota
+        const selectedType = maestraWheelType.value;
+        let currentSegments = [];
+
+        if (selectedType === 'CUSTOM' && customWheelConfig) {
+            currentSegments = customWheelConfig;
+        } else if (selectedType === 'CUSTOM') {
+            // Inizializza ruota custom con configurazione default
+            currentSegments = [...wheelConfigs.ROUND1];
+        } else {
+            currentSegments = [...wheelConfigs[selectedType]];
+        }
+
+        // Aggiorna il campo numero spicchi
+        maestraSegmentsCount.value = currentSegments.length;
+
+        // Genera gli input per ogni spicchio
+        maestraSegmentsGrid.innerHTML = '';
+        currentSegments.forEach((segment, index) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <label class="text-xs font-medium text-gray-600 min-w-0 flex-shrink-0">${index + 1}:</label>
+                <input type="text" value="${segment}" data-segment-idx="${index}"
+                       class="maestra-segment-input flex-1 px-2 py-1 border border-pink-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
+                       placeholder="Es: 500, JOLLY, BANCA ROTTA">
+            `;
+            maestraSegmentsGrid.appendChild(div);
+        });
+    }
+
+    function updateSegmentsCount() {
+        const targetCount = parseInt(maestraSegmentsCount.value) || 6;
+        const currentInputs = maestraSegmentsGrid.querySelectorAll('.maestra-segment-input');
+        const currentSegments = Array.from(currentInputs).map(input => input.value || '100');
+
+        // Aggiusta il numero di segmenti
+        if (targetCount > currentSegments.length) {
+            // Aggiungi segmenti con valori default
+            for (let i = currentSegments.length; i < targetCount; i++) {
+                currentSegments.push(i % 4 === 0 ? 'PASSAMANO' : i % 8 === 0 ? 'JOLLY' : (300 + i * 50).toString());
+            }
+        } else if (targetCount < currentSegments.length) {
+            // Rimuovi segmenti in eccesso
+            currentSegments.splice(targetCount);
+        }
+
+        // Rigenera la griglia
+        maestraSegmentsGrid.innerHTML = '';
+        currentSegments.forEach((segment, index) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <label class="text-xs font-medium text-gray-600 min-w-0 flex-shrink-0">${index + 1}:</label>
+                <input type="text" value="${segment}" data-segment-idx="${index}"
+                       class="maestra-segment-input flex-1 px-2 py-1 border border-pink-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
+                       placeholder="Es: 500, JOLLY, BANCA ROTTA">
+            `;
+            maestraSegmentsGrid.appendChild(div);
+        });
+    }
+
+    function applyCustomWheel() {
+        const inputs = maestraSegmentsGrid.querySelectorAll('.maestra-segment-input');
+        const newSegments = Array.from(inputs).map(input => {
+            const value = input.value.trim();
+            // Converti numeri in numeri, mantieni stringhe come stringhe
+            return /^\d+$/.test(value) ? parseInt(value) : value;
+        });
+
+        if (newSegments.length < 6) {
+            maestraWheelMsg.textContent = 'Serve almeno 6 spicchi!';
+            return;
+        }
+
+        // Applica immediatamente la nuova configurazione
+        wheelSegments = newSegments;
+        customWheelConfig = [...newSegments];
+        localStorage.setItem('ruota_wheel_active', 'custom'); // Marca come attiva
+        createWheelSegments();
+
+        maestraWheelMsg.textContent = 'Ruota applicata! Gira per vedere i cambiamenti.';
+        setTimeout(() => { maestraWheelMsg.textContent = ''; }, 3000);
+    }
+
+    function resetWheelToDefault() {
+        customWheelConfig = null;
+        maestraWheelType.value = 'ROUND1';
+        localStorage.removeItem('ruota_wheel_active'); // Rimuovi la persistenza
+        renderMaestraWheel();
+
+        // Riapplica la configurazione standard basata sul round corrente
+        const round = gameRounds[currentRoundIndex];
+        if (round.type === 'FINALE') wheelSegments = wheelConfigs.FINALE;
+        else if (currentRoundIndex === 0) wheelSegments = wheelConfigs.ROUND1;
+        else wheelSegments = wheelConfigs.ROUND2;
+        createWheelSegments();
+
+        maestraWheelMsg.textContent = 'Ruota ripristinata alle impostazioni default.';
+        setTimeout(() => { maestraWheelMsg.textContent = ''; }, 3000);
+    }
+
+    function saveWheelConfig() {
+        const inputs = maestraSegmentsGrid.querySelectorAll('.maestra-segment-input');
+        const segments = Array.from(inputs).map(input => {
+            const value = input.value.trim();
+            return /^\d+$/.test(value) ? parseInt(value) : value;
+        });
+
+        if (segments.length < 6) {
+            maestraWheelMsg.textContent = 'Serve almeno 6 spicchi per salvare!';
+            return;
+        }
+
+        // Salva la configurazione e imposta come attiva
+        customWheelConfig = [...segments];
+        localStorage.setItem('ruota_custom_wheel', JSON.stringify(segments));
+        localStorage.setItem('ruota_wheel_active', 'custom'); // Marca come attiva
+
+        maestraWheelMsg.textContent = 'Configurazione ruota salvata!';
+
+        // Chiudi la modale dopo il salvataggio
+        if (maestraPanelOverlay) {
+            setTimeout(() => {
+                maestraPanelOverlay.classList.add('hidden');
+                maestraWheelMsg.textContent = '';
+            }, 600);
+        }
+    }
+
+    function loadCustomWheelConfig() {
+        const saved = localStorage.getItem('ruota_custom_wheel');
+        const activeWheel = localStorage.getItem('ruota_wheel_active');
+
+        if (saved) {
+            try {
+                customWheelConfig = JSON.parse(saved);
+
+                // Se la ruota personalizzata era attiva, applicala immediatamente
+                if (activeWheel === 'custom') {
+                    wheelSegments = [...customWheelConfig];
+                }
+            } catch(e) {
+                console.log('Errore caricamento ruota personalizzata:', e);
+            }
+        }
+    }
+
+    // Event listeners per personalizzazione ruota
+    if (maestraWheelType) {
+        maestraWheelType.addEventListener('change', renderMaestraWheel);
+    }
+
+    if (maestraSegmentsCount) {
+        maestraSegmentsCount.addEventListener('input', updateSegmentsCount);
+    }
+
+    if (maestraApplyWheelBtn) {
+        maestraApplyWheelBtn.addEventListener('click', applyCustomWheel);
+    }
+
+    if (maestraResetWheelBtn) {
+        maestraResetWheelBtn.addEventListener('click', resetWheelToDefault);
+    }
+
+    if (maestraSaveWheelBtn) {
+        maestraSaveWheelBtn.addEventListener('click', saveWheelConfig);
+    }
 
     // --- Inizializzazione ---
     loadSavedSettings(); // Carica impostazioni salvate
+    loadCustomWheelConfig(); // Carica configurazione ruota personalizzata
     createKeyboard();
     createWheelSegments();
     setupRound();

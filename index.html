@@ -482,6 +482,35 @@
                     <button id="maestra-hide-all-btn" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium text-sm">Nascondi Tutto</button>
                     <button id="maestra-reset-letters-btn" class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium text-sm">Reset Normale</button>
                 </div>
+
+                <hr class="border-pink-300 my-6">
+
+                <h3 class="text-xl font-bold mb-4 text-pink-700">Personalizza Ruota</h3>
+                <div class="mb-4">
+                    <label for="maestra-wheel-type" class="block text-sm font-semibold mb-2 text-gray-700">Tipo di ruota:</label>
+                    <select id="maestra-wheel-type" class="w-full px-3 py-2 border border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 mb-3">
+                        <option value="ROUND1">Round 1 (classico)</option>
+                        <option value="ROUND2">Round 2 (classico)</option>
+                        <option value="FINALE">Round Finale</option>
+                        <option value="CUSTOM">Personalizzata</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="maestra-segments-count" class="block text-sm font-semibold mb-2 text-gray-700">Numero di spicchi:</label>
+                    <input type="number" id="maestra-segments-count" min="6" max="36" value="24" class="w-full px-3 py-2 border border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div id="maestra-wheel-segments" class="mb-4 max-h-60 overflow-y-auto">
+                    <label class="block text-sm font-semibold mb-2 text-gray-700">Contenuto spicchi:</label>
+                    <div id="maestra-segments-grid" class="grid grid-cols-2 gap-2">
+                        <!-- Gli input per i segmenti verranno generati dinamicamente -->
+                    </div>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <button id="maestra-apply-wheel-btn" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold text-sm">Applica Ruota</button>
+                    <button id="maestra-reset-wheel-btn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold text-sm">Reset Default</button>
+                    <button id="maestra-save-wheel-btn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-sm">Salva Configurazione</button>
+                </div>
+                <div id="maestra-wheel-msg" class="text-sm text-pink-600"></div>
             </div>
         </div>
     </div>
